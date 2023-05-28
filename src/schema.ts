@@ -1,6 +1,6 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import type { GraphQLContext } from './context';
-import type { Link, User } from '@prisma/client';
+import type { Link, User, Prisma } from '@prisma/client';
 import { GraphQLError } from 'graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { hash, compare } from 'bcryptjs';
@@ -36,7 +36,7 @@ const typeDefinitions = /* GraphQL */ `
         id: ID!
         description: String!
         url: String!
-        comments: [Comment!]!
+        comments: [Comment!]!,
         postedBy: User
     }
 
@@ -60,7 +60,12 @@ const typeDefinitions = /* GraphQL */ `
    
     type Query {
         info: String!
-        feed(filterNeedle: String, skip: Int, take: Int): [Link!]!
+        feed(
+            filterNeedle: String
+            skip: Int
+            take: Int
+            orderBy: LinkOrderByInput
+        ): [Link!]!
         comment(id: ID!): Comment
         link(id: ID!): Link
         me: User!
@@ -71,6 +76,17 @@ const typeDefinitions = /* GraphQL */ `
         postCommentOnLink(linkId: ID!, body: String!): Comment!
         signup(email: String!, password: String!, name: String!): AuthPayload
         login(email: String!, password: String!): AuthPayload
+    }
+
+    input LinkOrderByInput {
+        description: Sort
+        url: Sort
+        createdAt: Sort
+    }
+       
+    enum Sort {
+        asc
+        desc
     }
 `;
 
@@ -85,28 +101,31 @@ const resolvers = {
         },
         async feed(
             parent: unknown,
-            args: { filterNeedle?: string; skip?: number; take?: number },
+            args: {
+                filter?: string
+                skip?: number
+                take?: number
+                orderBy?: {
+                    description?: Prisma.SortOrder
+                    url?: Prisma.SortOrder
+                    createdAt?: Prisma.SortOrder
+                }
+            },
             context: GraphQLContext
         ) {
-            const where = args.filterNeedle
+            const where = args.filter
                 ? {
                     OR: [
-                        { description: { contains: args.filterNeedle } },
-                        { url: { contains: args.filterNeedle } }
+                        { description: { contains: args.filter } },
+                        { url: { contains: args.filter } }
                     ]
                 }
                 : {};
-
-            const take = applyTakeConstraints({
-                min: 1,
-                max: 50,
-                value: args.take ?? 30
-            });
-
             return context.prisma.link.findMany({
                 where,
                 skip: args.skip,
-                take
+                take: args.take,
+                orderBy: args.orderBy
             });
         },
         async comment(
