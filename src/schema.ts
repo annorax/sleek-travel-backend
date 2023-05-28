@@ -30,14 +30,7 @@ const links: Link[] = [
 const resolvers = {
     Query: {
         info: () => `This is the API of a Hackernews Clone`,
-        // 3
         feed: () => links
-    },
-    // 4
-    Link: {
-        id: (parent: Link) => parent.id,
-        description: (parent: Link) => parent.description,
-        url: (parent: Link) => parent.url
     }
 }
 
