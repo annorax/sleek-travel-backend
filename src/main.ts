@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { resolvers } from "@generated/type-graphql";
 import express from 'express';
 import { createYoga } from 'graphql-yoga';
