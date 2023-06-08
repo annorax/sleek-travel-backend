@@ -1,16 +1,50 @@
 import "reflect-metadata";
-import { resolvers } from "@generated/type-graphql";
+import { User, UserCrudResolver, CreateOneUserArgs } from "@generated/type-graphql";
 import express from 'express';
 import { createYoga } from 'graphql-yoga';
-import { createContext } from './context';
+import { createContext, GraphQLContext } from './context';
 import passport from 'passport';
-import { buildSchema } from "type-graphql";
+import { Resolver, Args, buildSchema, Field, Int, Ctx, Root, Mutation, ArgsType } from "type-graphql";
+import { hashPassword } from "./password";
  
+@ArgsType()
+class RegisterUserArgs {
+  @Field()
+  name!: string;
+
+  @Field()
+  email!: string;
+
+  @Field()
+  password!: string;
+}
+
+@Resolver(of => User)
+class CustomUserResolver {
+  @Mutation(returns => User)
+  async registerUser(
+    @Ctx() { prisma }: GraphQLContext,
+    @Args() { name, email, password }: RegisterUserArgs,
+  ): Promise<User> {
+    return await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: await hashPassword(password),
+        kind: "NORMAL"
+      },
+    });
+  }
+}
+
 async function main(): Promise<void> {
   const app = express();
   app.use(passport.initialize());
   const schema = await buildSchema({
-    resolvers,
+    resolvers: [
+      UserCrudResolver,
+      CustomUserResolver
+    ],
     validate: false,
   });
   const yoga = createYoga({ schema, context: createContext });
