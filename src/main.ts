@@ -1,11 +1,14 @@
 import "reflect-metadata";
-import { User, UserCrudResolver, CreateOneUserArgs } from "@generated/type-graphql";
+import { User, UserCrudResolver } from "@generated/type-graphql";
+import _ from "lodash";
 import express from 'express';
 import { createYoga } from 'graphql-yoga';
 import { createContext, GraphQLContext } from './context';
 import passport from 'passport';
-import { Resolver, Args, buildSchema, Field, Int, Ctx, Root, Mutation, ArgsType } from "type-graphql";
-import { hashPassword } from "./password";
+import { Resolver, Args, buildSchema, Field, Ctx, Mutation, ArgsType, Query, ObjectType } from "type-graphql";
+import { comparePassword, hashPassword } from "./password";
+
+const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;
  
 @ArgsType()
 class RegisterUserArgs {
@@ -18,6 +21,18 @@ class RegisterUserArgs {
   @Field()
   password!: string;
 }
+
+@ArgsType()
+class LogInUserArgs {
+  @Field()
+  email!: string;
+
+  @Field()
+  password!: string;
+}
+
+@ObjectType()
+class SafeUser extends Omit(User, ['password']) {}
 
 @Resolver(of => User)
 class CustomUserResolver {
@@ -34,6 +49,24 @@ class CustomUserResolver {
         kind: "NORMAL"
       },
     });
+  }
+
+  @Mutation(returns => SafeUser, {nullable: true})
+  async logInUser(
+    @Ctx() { prisma }: GraphQLContext,
+    @Args() { email, password }: LogInUserArgs,
+  ): Promise<SafeUser | null> {
+    let result: SafeUser | null = null;
+    let user = await prisma.user.findFirst({
+      where: { email }
+    });
+    if (user) {
+      const passwordsMatch: boolean = await comparePassword(user.password, password);
+      if (passwordsMatch) {
+        result = _.omit(user, "password");
+      }
+    }
+    return result;
   }
 }
 
