@@ -1,7 +1,8 @@
 import "reflect-metadata";
 import { User, UserCrudResolver } from "@generated/type-graphql";
 import _ from "lodash";
-import express from 'express';
+import express from "express";
+import stringify from "fast-safe-stringify";
 import { createYoga } from 'graphql-yoga';
 import { createContext, GraphQLContext } from './context';
 import passport from 'passport';
@@ -34,39 +35,49 @@ class LogInUserArgs {
 @ObjectType()
 class SafeUser extends Omit(User, ['password']) { }
 
-@Resolver(of => User)
+@Resolver(of => SafeUser)
 class CustomUserResolver {
     @Mutation(returns => User)
     async registerUser(
         @Ctx() { prisma }: GraphQLContext,
         @Args() { name, email, password }: RegisterUserArgs,
-    ): Promise<User> {
-        return await prisma.user.create({
-            data: {
-                name,
-                email,
-                password: await hashPassword(password),
-                kind: "NORMAL"
-            },
-        });
+    ): Promise<SafeUser> {
+        return _.omit(
+            await prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    password: await hashPassword(password),
+                    kind: "NORMAL"
+                }
+            }),
+            "password"
+        );
     }
 
     @Mutation(returns => SafeUser, { nullable: true })
     async logInUser(
-        @Ctx() { prisma }: GraphQLContext,
+        @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { email, password }: LogInUserArgs,
     ): Promise<SafeUser | null> {
-        let result: SafeUser | null = null;
         let user = await prisma.user.findFirst({
             where: { email }
         });
-        if (user) {
-            const passwordsMatch: boolean = await comparePassword(user.password, password);
-            if (passwordsMatch) {
-                result = _.omit(user, "password");
-            }
+        if (!user) {
+            return null;
         }
-        return result;
+        const passwordsMatch: boolean = await comparePassword(user.password, password);
+        if (!passwordsMatch) {
+            return null;
+        }
+        const ipAddress:string = initialContext.req.headers['x-forwarded-for'] || initialContext.req.socket.remoteAddress;
+        await prisma.login.create({
+            data: {
+                ...(ipAddress ? { ipAddress } : {}),
+                userId: user.id
+            }
+        });
+        return _.omit(user, "password");
     }
 }
 

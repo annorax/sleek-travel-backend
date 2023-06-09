@@ -28,6 +28,7 @@
     "class-validator": "^0.14.0",
     "dotenv": "^16.1.4",
     "express": "^4.18.2",
+    "fast-safe-stringify": "^2.1.1",
     "graphql": "^16.6.0",
     "graphql-fields": "^2.0.3",
     "graphql-scalars": "^1.22.1",
