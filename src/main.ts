@@ -2,7 +2,6 @@ import "reflect-metadata";
 import { User, UserCrudResolver } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
-import stringify from "fast-safe-stringify";
 import { createYoga } from 'graphql-yoga';
 import { createContext, GraphQLContext } from './context';
 import passport from 'passport';
