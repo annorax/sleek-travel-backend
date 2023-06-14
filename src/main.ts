@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { User, UserCrudResolver } from "@generated/type-graphql";
+import { User, UserCrudResolver, ProductCrudResolver } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
 import { createYoga } from 'graphql-yoga';
@@ -86,7 +86,8 @@ async function main(): Promise<void> {
     const schema = await buildSchema({
         resolvers: [
             UserCrudResolver,
-            CustomUserResolver
+            CustomUserResolver,
+            ProductCrudResolver
         ],
         validate: false,
     });

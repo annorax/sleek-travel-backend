@@ -37,3 +37,21 @@ model Login {
     userId    Int
     createdAt DateTime  @default(now())
 }
+
+model Product {
+    id          Int       @id @default(autoincrement())
+    upc         String
+    name        String
+    description String
+    amazonASIN  String
+    country     String
+    brand       String
+    model       String
+    color       String
+    weightInKgs Float
+    widthInCms  Float
+    heightInCms Float
+    depthInCms  Float
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+}
