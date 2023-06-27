@@ -7,6 +7,7 @@ import { createContext, GraphQLContext } from './context';
 import passport from 'passport';
 import { Resolver, Args, buildSchema, Field, Ctx, Mutation, ArgsType, Query, ObjectType } from "type-graphql";
 import { comparePassword, hashPassword } from "./password";
+import { createTokenForUser } from "./auth";
 
 const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;
 
@@ -34,31 +35,40 @@ class LogInUserArgs {
 @ObjectType()
 class SafeUser extends Omit(User, ['password']) { }
 
+@ObjectType()
+class LoginPayload {
+    @Field()
+    token!: string;
+
+    @Field()
+    user!: SafeUser;
+}
+
 @Resolver(of => SafeUser)
 class CustomUserResolver {
-    @Mutation(returns => User)
+    @Mutation(returns => LoginPayload)
     async registerUser(
         @Ctx() { prisma }: GraphQLContext,
         @Args() { name, email, password }: RegisterUserArgs,
-    ): Promise<SafeUser> {
-        return _.omit(
-            await prisma.user.create({
-                data: {
-                    name,
-                    email,
-                    password: await hashPassword(password),
-                    kind: "NORMAL"
-                }
-            }),
-            "password"
-        );
+    ) : Promise<LoginPayload> {
+        const user = await prisma.user.create({
+            data: {
+                name,
+                email,
+                password: await hashPassword(password),
+                kind: "NORMAL"
+            }
+        });
+        const safeUser = _.omit(user, "password");
+        const token = createTokenForUser(user);
+        return { token, user: safeUser }
     }
 
-    @Mutation(returns => SafeUser, { nullable: true })
+    @Mutation(returns => LoginPayload, { nullable: true })
     async logInUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { email, password }: LogInUserArgs,
-    ): Promise<SafeUser | null> {
+    ) : Promise<LoginPayload | null> {
         let user = await prisma.user.findFirst({
             where: { email }
         });
@@ -76,7 +86,9 @@ class CustomUserResolver {
                 userId: user.id
             }
         });
-        return _.omit(user, "password");
+        const safeUser = _.omit(user, "password");
+        const token = createTokenForUser(user);
+        return { token, user: safeUser }
     }
 }
 
