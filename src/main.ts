@@ -8,7 +8,7 @@ import passport from 'passport';
 import { Resolver, Args, buildSchema, Ctx, Mutation, Authorized } from "type-graphql";
 import { comparePassword, hashPassword, createTokenForUser, CustomAuthChecker } from "./auth";
 import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser } from "./types";
-import { UserKind } from "@prisma/client";
+import { Role } from "@prisma/client";
 
 @Resolver(of => SafeUser)
 class CustomUserResolver {
@@ -64,7 +64,7 @@ async function main(): Promise<void> {
     applyResolversEnhanceMap({
         Product: {
           _query: [Authorized()],
-          _mutation: [Authorized(UserKind.ADMIN)]
+          _mutation: [Authorized(Role.ADMIN)]
         },
       });
     const schema = await buildSchema({

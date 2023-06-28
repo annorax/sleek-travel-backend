@@ -14,7 +14,7 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-enum UserKind {
+enum Role {
     NORMAL
     ADMIN
 }
@@ -24,7 +24,7 @@ model User {
     name      String
     email     String    @unique
     password  String
-    kind      UserKind
+    role      Role
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
     logins    Login[]

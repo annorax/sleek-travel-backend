@@ -1,4 +1,4 @@
-import { PrismaClient, User, UserKind } from '@prisma/client';
+import { PrismaClient, User, Role } from '@prisma/client';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -45,8 +45,13 @@ export async function comparePassword(
 }
 
 export class CustomAuthChecker implements AuthCheckerInterface<GraphQLContext> {
-    check({ root, args, context, info }: ResolverData<GraphQLContext>, roles: UserKind[]) {
-        console.log(`Mark: ${roles?.length}`);
-        return true;
+    check({ root, args, context, info }: ResolverData<GraphQLContext>, roles: Role[]) {
+        if (!context.currentUser) {
+            return false;
+        }
+        if (!roles.length) {
+            return true;
+        }
+        return roles.indexOf(context.currentUser.role) > -1;
     }
   }
