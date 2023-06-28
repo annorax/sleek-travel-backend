@@ -2,9 +2,11 @@ import "reflect-metadata";
 import _ from "lodash";
 import { GraphQLContext } from './context';
 import { Resolver, Args, Ctx, Mutation } from "type-graphql";
-import { comparePassword, hashPassword, createTokenForUser } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser } from "./types";
+import { comparePassword, hashPassword, createAuthToken, verifyEmailAddress } from "./auth";
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs } from "./types";
 import { Role } from "@prisma/client";
+import { sendEmailVerificationRequest } from "./mail";
+import { GraphQLVoid } from "graphql-scalars";
 
 @Resolver(of => SafeUser)
 export class CustomUserResolver {
@@ -22,8 +24,21 @@ export class CustomUserResolver {
             }
         });
         const safeUser = _.omit(user, "password");
-        const token = createTokenForUser(user);
+        const token = createAuthToken(user);
+        sendEmailVerificationRequest(user).catch(err => console.error(err));
         return { token, user: safeUser }
+    }
+
+    @Mutation(returns => GraphQLVoid)
+    async verifyEmailAddress(
+        @Ctx() { initialContext, prisma }: GraphQLContext,
+        @Args() { token }: VerifyEmailAddressArgs,
+    ) : Promise<void> {
+        const userId = verifyEmailAddress(token);
+        await prisma.user.update({
+            where: { id: userId },
+            data: { emailValidated: new Date() }
+        });
     }
 
     @Mutation(returns => LogInPayload, { nullable: true })
@@ -49,7 +64,7 @@ export class CustomUserResolver {
             }
         });
         const safeUser = _.omit(user, "password");
-        const token = createTokenForUser(user);
+        const token = createAuthToken(user);
         return { token, user: safeUser }
     }
 }

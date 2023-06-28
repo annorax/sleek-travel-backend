@@ -28,6 +28,12 @@ export class LogInUserArgs {
     password!: string;
 }
 
+@ArgsType()
+export class VerifyEmailAddressArgs {
+    @Field()
+    token!: string;
+}
+
 @ObjectType()
 export class SafeUser extends Omit(User, ['password']) { }
 

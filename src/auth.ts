@@ -7,10 +7,11 @@ import { GraphQLContext } from './context';
 
 const scryptAsync = promisify(scrypt);
 
-const secret = <string>process.env.APP_AUTH_SECRET;
+const authSecret = <string>process.env.AUTH_SECRET;
+const emailVerificationSecret = <string>process.env.EMAIL_VERIFICATION_SECRET;
 
-export function createTokenForUser(user: User): string {
-    return sign({ userId: user.id }, secret);
+export function createAuthToken(user: User): string {
+    return sign({ userId: user.id }, authSecret);
 }
 
 export async function authenticateUser(
@@ -24,11 +25,20 @@ export async function authenticateUser(
             return null;
         }
         const token = tokenizedHeader[1];
-        const tokenPayload = verify(token, secret) as JwtPayload;
+        const tokenPayload = verify(token, authSecret) as JwtPayload;
         const userId = tokenPayload.userId;
         return await prisma.user.findUnique({ where: { id: userId } });
     }
     return null;
+}
+
+export function createEmailVerificationToken(user: User): string {
+    return sign({ userId: user.id }, emailVerificationSecret);
+}
+
+export function verifyEmailAddress(token:string): number {
+    const tokenPayload = verify(token, emailVerificationSecret) as JwtPayload;
+    return tokenPayload.userId;
 }
 
 export async function hashPassword(password: string) {
