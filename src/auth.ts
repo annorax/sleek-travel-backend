@@ -1,7 +1,10 @@
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient, User, UserKind } from '@prisma/client';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import { AuthCheckerInterface, ResolverData } from 'type-graphql';
+import { GraphQLContext } from './context';
+import stringify from 'fast-safe-stringify';
 
 const scryptAsync = promisify(scrypt);
 
@@ -40,3 +43,10 @@ export async function comparePassword(
     const suppliedPasswordBuf = (await scryptAsync(suppliedPassword, salt, 64)) as Buffer;
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
 }
+
+export class CustomAuthChecker implements AuthCheckerInterface<GraphQLContext> {
+    check({ root, args, context, info }: ResolverData<GraphQLContext>, roles: UserKind[]) {
+        console.log(`Mark: ${roles?.length}`);
+        return true;
+    }
+  }

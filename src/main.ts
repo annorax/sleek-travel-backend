@@ -1,13 +1,14 @@
 import "reflect-metadata";
-import { ProductCrudResolver } from "@generated/type-graphql";
+import { ProductCrudResolver, applyResolversEnhanceMap } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
 import { createYoga } from 'graphql-yoga';
 import { createContext, GraphQLContext } from './context';
 import passport from 'passport';
-import { Resolver, Args, buildSchema, Ctx, Mutation } from "type-graphql";
-import { comparePassword, hashPassword, createTokenForUser } from "./auth";
+import { Resolver, Args, buildSchema, Ctx, Mutation, Authorized } from "type-graphql";
+import { comparePassword, hashPassword, createTokenForUser, CustomAuthChecker } from "./auth";
 import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser } from "./types";
+import { UserKind } from "@prisma/client";
 
 @Resolver(of => SafeUser)
 class CustomUserResolver {
@@ -60,11 +61,18 @@ class CustomUserResolver {
 async function main(): Promise<void> {
     const app = express();
     app.use(passport.initialize());
+    applyResolversEnhanceMap({
+        Product: {
+          _query: [Authorized()],
+          _mutation: [Authorized(UserKind.ADMIN)]
+        },
+      });
     const schema = await buildSchema({
         resolvers: [
             CustomUserResolver,
             ProductCrudResolver
         ],
+        authChecker: CustomAuthChecker,
         validate: false,
     });
     const yoga = createYoga({ schema, context: createContext });
