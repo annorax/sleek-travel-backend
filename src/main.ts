@@ -1,55 +1,21 @@
 import "reflect-metadata";
-import { User, UserCrudResolver, ProductCrudResolver } from "@generated/type-graphql";
+import { UserCrudResolver, ProductCrudResolver } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
 import { createYoga } from 'graphql-yoga';
 import { createContext, GraphQLContext } from './context';
 import passport from 'passport';
-import { Resolver, Args, buildSchema, Field, Ctx, Mutation, ArgsType, Query, ObjectType } from "type-graphql";
+import { Resolver, Args, buildSchema, Ctx, Mutation } from "type-graphql";
 import { comparePassword, hashPassword, createTokenForUser } from "./auth";
-
-const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;
-
-@ArgsType()
-class RegisterUserArgs {
-    @Field()
-    name!: string;
-
-    @Field()
-    email!: string;
-
-    @Field()
-    password!: string;
-}
-
-@ArgsType()
-class LogInUserArgs {
-    @Field()
-    email!: string;
-
-    @Field()
-    password!: string;
-}
-
-@ObjectType()
-class SafeUser extends Omit(User, ['password']) { }
-
-@ObjectType()
-class LoginPayload {
-    @Field()
-    token!: string;
-
-    @Field()
-    user!: SafeUser;
-}
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser } from "./types";
 
 @Resolver(of => SafeUser)
 class CustomUserResolver {
-    @Mutation(returns => LoginPayload)
+    @Mutation(returns => LogInPayload)
     async registerUser(
         @Ctx() { prisma }: GraphQLContext,
         @Args() { name, email, password }: RegisterUserArgs,
-    ) : Promise<LoginPayload> {
+    ) : Promise<LogInPayload> {
         const user = await prisma.user.create({
             data: {
                 name,
@@ -63,11 +29,11 @@ class CustomUserResolver {
         return { token, user: safeUser }
     }
 
-    @Mutation(returns => LoginPayload, { nullable: true })
+    @Mutation(returns => LogInPayload, { nullable: true })
     async logInUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { email, password }: LogInUserArgs,
-    ) : Promise<LoginPayload | null> {
+    ) : Promise<LogInPayload | null> {
         let user = await prisma.user.findFirst({
             where: { email }
         });
