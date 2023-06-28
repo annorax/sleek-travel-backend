@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { UserCrudResolver, ProductCrudResolver } from "@generated/type-graphql";
+import { ProductCrudResolver } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
 import { createYoga } from 'graphql-yoga';
@@ -62,7 +62,6 @@ async function main(): Promise<void> {
     app.use(passport.initialize());
     const schema = await buildSchema({
         resolvers: [
-            UserCrudResolver,
             CustomUserResolver,
             ProductCrudResolver
         ],
