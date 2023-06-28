@@ -6,8 +6,7 @@ import { createYoga } from 'graphql-yoga';
 import { createContext, GraphQLContext } from './context';
 import passport from 'passport';
 import { Resolver, Args, buildSchema, Field, Ctx, Mutation, ArgsType, Query, ObjectType } from "type-graphql";
-import { comparePassword, hashPassword } from "./password";
-import { createTokenForUser } from "./auth";
+import { comparePassword, hashPassword, createTokenForUser } from "./auth";
 
 const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;
 
