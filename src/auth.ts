@@ -18,18 +18,18 @@ export async function authenticateUser(
     prisma: PrismaClient,
     request: Request
 ): Promise<User | null> {
-    const header = request.headers.get('authorization');
-    if (header !== null) {
-        const tokenizedHeader = header.split(' ');
-        if (tokenizedHeader[0] !== "Bearer") {
-            return null;
-        }
-        const token = tokenizedHeader[1];
-        const tokenPayload = verify(token, authSecret) as JwtPayload;
-        const userId = tokenPayload.userId;
-        return await prisma.user.findUnique({ where: { id: userId } });
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+        return null;
     }
-    return null;
+    const tokenizedAuthHeader = authHeader.split(' ');
+    if (tokenizedAuthHeader[0] !== "Bearer") {
+        return null;
+    }
+    const token = tokenizedAuthHeader[1];
+    const tokenPayload = verify(token, authSecret) as JwtPayload;
+    const userId = tokenPayload.userId;
+    return await prisma.user.findUnique({ where: { id: userId } });
 }
 
 export function createEmailVerificationToken(user: User): string {

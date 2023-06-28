@@ -29,7 +29,7 @@ export class CustomUserResolver {
         return { token, user: safeUser }
     }
 
-    @Mutation(returns => GraphQLVoid)
+    @Mutation(returns => GraphQLVoid, { nullable: true })
     async verifyEmailAddress(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { token }: VerifyEmailAddressArgs,
