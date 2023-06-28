@@ -1,4 +1,5 @@
 import { User } from "@generated/type-graphql";
+import { IsEmail } from "class-validator";
 import { Field, ArgsType, ObjectType } from "type-graphql";
 
 const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;
@@ -9,6 +10,9 @@ export class RegisterUserArgs {
     name!: string;
 
     @Field()
+    @IsEmail({
+        allow_display_name: true
+    })
     email!: string;
 
     @Field()

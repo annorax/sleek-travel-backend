@@ -17,15 +17,15 @@ async function main(): Promise<void> {
         Product: {
           _query: [Authorized()],
           _mutation: [Authorized(Role.ADMIN)]
-        },
-      });
+        }
+    });
     const schema = await buildSchema({
         resolvers: [
             CustomUserResolver,
             ProductCrudResolver
         ],
         authChecker: CustomAuthChecker,
-        validate: false,
+        validate: true
     });
     const yoga = createYoga({ schema, context: createContext });
     app.use(yoga.graphqlEndpoint, yoga);
