@@ -22,7 +22,7 @@ class CustomUserResolver {
                 name,
                 email,
                 password: await hashPassword(password),
-                kind: "NORMAL"
+                role: Role.NORMAL
             }
         });
         const safeUser = _.omit(user, "password");

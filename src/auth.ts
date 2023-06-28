@@ -4,7 +4,6 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { AuthCheckerInterface, ResolverData } from 'type-graphql';
 import { GraphQLContext } from './context';
-import stringify from 'fast-safe-stringify';
 
 const scryptAsync = promisify(scrypt);
 
@@ -20,7 +19,11 @@ export async function authenticateUser(
 ): Promise<User | null> {
     const header = request.headers.get('authorization');
     if (header !== null) {
-        const token = header.split(' ')[1];
+        const tokenizedHeader = header.split(' ');
+        if (tokenizedHeader[0] !== "Bearer") {
+            return null;
+        }
+        const token = tokenizedHeader[1];
         const tokenPayload = verify(token, secret) as JwtPayload;
         const userId = tokenPayload.userId;
         return await prisma.user.findUnique({ where: { id: userId } });
