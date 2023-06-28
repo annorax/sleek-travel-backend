@@ -16,7 +16,7 @@ export class CustomUserResolver {
         const user = await prisma.user.create({
             data: {
                 name,
-                email,
+                email: email.toLowerCase(),
                 password: await hashPassword(password),
                 role: Role.NORMAL
             }
@@ -32,7 +32,7 @@ export class CustomUserResolver {
         @Args() { email, password }: LogInUserArgs,
     ) : Promise<LogInPayload | null> {
         let user = await prisma.user.findFirst({
-            where: { email }
+            where: { email: email.toLowerCase() }
         });
         if (!user) {
             return null;
