@@ -37,7 +37,7 @@ export class CustomUserResolver {
         const userId = verifyEmailAddress(token);
         await prisma.user.update({
             where: { id: userId },
-            data: { emailValidated: new Date() }
+            data: { emailVerified: new Date() }
         });
     }
 

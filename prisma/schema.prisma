@@ -25,7 +25,7 @@ model User {
     email           String    @unique
     password        String
     role            Role
-    emailValidated  DateTime?
+    emailVerified   DateTime?
     createdAt       DateTime  @default(now())
     updatedAt       DateTime  @updatedAt
     logins          Login[]
