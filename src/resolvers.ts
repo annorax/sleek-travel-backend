@@ -35,10 +35,16 @@ export class CustomUserResolver {
         @Args() { token }: VerifyEmailAddressArgs,
     ) : Promise<void> {
         const userId = verifyEmailAddress(token);
-        await prisma.user.update({
-            where: { id: userId },
+        const result = await prisma.user.updateMany({
+            where: {
+                id: userId,
+                emailVerified: null
+            },
             data: { emailVerified: new Date() }
         });
+        if (!result.count) {
+            throw "Already verified";
+        }
     }
 
     @Mutation(returns => LogInPayload, { nullable: true })
