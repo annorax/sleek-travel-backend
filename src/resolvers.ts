@@ -3,30 +3,75 @@ import _ from "lodash";
 import { GraphQLContext } from './context';
 import { Resolver, Args, Ctx, Mutation } from "type-graphql";
 import { comparePassword, hashPassword, createAuthToken, verifyEmailAddress } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs } from "./types";
-import { Role } from "@prisma/client";
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs } from "./types";
+import { Role, User } from "@prisma/client";
 import { sendEmailVerificationRequest } from "./mail";
 import { GraphQLVoid } from "graphql-scalars";
+import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
+import crypto from 'crypto';
+import ms from "ms";
+
+const pinpointSMSVoiceV2Client = new PinpointSMSVoiceV2Client({});
+function sanitizeUser(user:User): SafeUser {
+    return _.omit(user, "password", "otp", "otpCreatedAt", "phoneNumberVerified", "emailVerified");
+}
 
 @Resolver(of => SafeUser)
 export class CustomUserResolver {
     @Mutation(returns => LogInPayload)
     async registerUser(
         @Ctx() { prisma }: GraphQLContext,
-        @Args() { name, email, password }: RegisterUserArgs,
+        @Args() { name, phoneNumber, email, password }: RegisterUserArgs,
     ) : Promise<LogInPayload> {
+        const otp = crypto.randomInt(0, 1000000);
         const user = await prisma.user.create({
             data: {
                 name,
+                phoneNumber,
+                otp,
+                otpCreatedAt: new Date(),
                 email: email.toLowerCase(),
                 password: await hashPassword(password),
-                role: Role.NORMAL
+                role: Role.NORMAL,
             }
         });
-        const safeUser = _.omit(user, "password");
         const token = createAuthToken(user);
         sendEmailVerificationRequest(user).catch(err => console.error(err));
-        return { token, user: safeUser }
+        pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
+            DestinationPhoneNumber: phoneNumber,
+            OriginationIdentity: "Slim-Travel",
+            MessageBody: `Your SlimTravel OTP is ${otp.toString().padStart(6, "0")}`
+        })).catch(err => console.error(err));;
+        return { token, user: sanitizeUser(user) }
+    }
+
+    @Mutation(returns => GraphQLVoid, { nullable: true })
+    async verifyPhoneNumber(
+        @Ctx() { initialContext, prisma }: GraphQLContext,
+        @Args() { userId, otp }: VerifyPhoneNumberArgs,
+    ) : Promise<void> {
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user) {
+            throw "User not found";
+        }
+        if (user.otpCreatedAt.getTime() < new Date().getTime() - ms("5 minutes")) {
+            throw "OTP expired";
+        }
+        if (user?.otp !== parseInt(otp)) {
+            throw "OTP mismatch";
+        }
+        const result = await prisma.user.updateMany({
+            where: {
+                id: userId,
+                phoneNumberVerified: null
+            },
+            data: { phoneNumberVerified: new Date() }
+        });
+        if (!result.count) {
+            throw "Already verified";
+        }
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
@@ -69,8 +114,7 @@ export class CustomUserResolver {
                 userId: user.id
             }
         });
-        const safeUser = _.omit(user, "password");
         const token = createAuthToken(user);
-        return { token, user: safeUser }
+        return { token, user: sanitizeUser(user) }
     }
 }

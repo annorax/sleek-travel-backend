@@ -1,5 +1,5 @@
 import { User } from "@generated/type-graphql";
-import { IsEmail } from "class-validator";
+import { IsEmail, IsPhoneNumber, IsNumberString, Length } from "class-validator";
 import { Field, ArgsType, ObjectType } from "type-graphql";
 
 const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;
@@ -8,6 +8,10 @@ const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Om
 export class RegisterUserArgs {
     @Field()
     name!: string;
+
+    @Field()
+    @IsPhoneNumber()
+    phoneNumber!: string;
 
     @Field()
     @IsEmail({
@@ -34,8 +38,24 @@ export class VerifyEmailAddressArgs {
     token!: string;
 }
 
+@ArgsType()
+export class VerifyPhoneNumberArgs {
+    @Field()
+    @IsNumberString({
+        no_symbols: true
+    })
+    userId!: number;
+
+    @Field()
+    @IsNumberString({
+        no_symbols: true
+    })
+    @Length(6)
+    otp!: string;
+}
+
 @ObjectType()
-export class SafeUser extends Omit(User, ['password']) { }
+export class SafeUser extends Omit(User, ["password", "otp", "otpCreatedAt", "phoneNumberVerified", "emailVerified", "createdAt", "updatedAt"]) { }
 
 @ObjectType()
 export class LogInPayload {

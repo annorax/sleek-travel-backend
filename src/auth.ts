@@ -33,7 +33,7 @@ export async function authenticateUser(
 }
 
 export function createEmailVerificationToken(user: User): string {
-    return sign({ userId: user.id }, emailVerificationSecret);
+    return sign({ userId: user.id }, emailVerificationSecret, { expiresIn: 60 * 60 });
 }
 
 export function verifyEmailAddress(token:string): number {
