@@ -41,9 +41,6 @@ export class VerifyEmailAddressArgs {
 @ArgsType()
 export class VerifyPhoneNumberArgs {
     @Field()
-    @IsNumberString({
-        no_symbols: true
-    })
     userId!: number;
 
     @Field()
