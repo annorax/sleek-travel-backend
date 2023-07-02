@@ -33,6 +33,22 @@ export class LogInUserArgs {
 }
 
 @ArgsType()
+export class ResendEmailVerificationRequestArgs {
+    @Field()
+    @IsEmail({
+        allow_display_name: true
+    })
+    email!: string;
+}
+
+@ArgsType()
+export class ResendPhoneNumberVerificationRequestArgs {
+    @Field()
+    @IsPhoneNumber()
+    phoneNumber!: string;
+}
+
+@ArgsType()
 export class VerifyEmailAddressArgs {
     @Field()
     token!: string;

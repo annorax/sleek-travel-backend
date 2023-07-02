@@ -1,17 +1,16 @@
 import "reflect-metadata";
 import _ from "lodash";
-import { GraphQLContext } from './context';
+import { GraphQLContext } from "./context";
 import { Resolver, Args, Ctx, Mutation } from "type-graphql";
-import { comparePassword, hashPassword, createAuthToken, verifyEmailAddress, sendEmailVerificationRequest, sendPhoneNumberVerificationRequest } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs } from "./types";
+import { comparePassword, hashPassword, createAuthToken, sendEmailVerificationRequest, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs } from "./types";
 import { Role, User } from "@prisma/client";
 import { GraphQLVoid } from "graphql-scalars";
-import crypto from 'crypto';
-import ms from "ms";
+import crypto from "crypto";
 
-function sanitizeUser(user:User): SafeUser {
-    return _.omit(user, "password", "otp", "otpCreatedAt", "phoneNumberVerified", "emailVerified");
-}
+const generateOTP = () => crypto.randomInt(0, 1000000);
+
+const sanitizeUser = (user:User): SafeUser => _.omit(user, "password", "otp", "otpCreatedAt", "phoneNumberVerified", "emailVerified");
 
 @Resolver(of => SafeUser)
 export class CustomUserResolver {
@@ -20,7 +19,7 @@ export class CustomUserResolver {
         @Ctx() { prisma }: GraphQLContext,
         @Args() { name, phoneNumber, email, password }: RegisterUserArgs,
     ) : Promise<LogInPayload> {
-        const otp = crypto.randomInt(0, 1000000);
+        const otp = generateOTP();
         const user = await prisma.user.create({
             data: {
                 name,
@@ -38,6 +37,39 @@ export class CustomUserResolver {
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
+    async resendEmailVerificationRequest(@Ctx() { initialContext, prisma }: GraphQLContext,
+        @Args() { email }: ResendEmailVerificationRequestArgs,
+    ) : Promise<void> {
+        const user = await prisma.user.findUnique({
+            where: { email: email.toLowerCase() }
+        });
+        if (!user) {
+            throw "User not found";
+        }
+        await sendEmailVerificationRequest(user);
+    }
+
+    @Mutation(returns => GraphQLVoid, { nullable: true })
+    async resendPhoneNumberVerificationRequest(@Ctx() { initialContext, prisma }: GraphQLContext,
+        @Args() { phoneNumber }: ResendPhoneNumberVerificationRequestArgs,
+    ) : Promise<void> {
+        const otp = generateOTP();
+        let user;
+        try {
+            user = await prisma.user.update({
+                where: { phoneNumber },
+                data: {
+                    otp,
+                    otpCreatedAt: new Date()
+                }
+            });
+        } catch (e) {
+            throw "User not found";
+        }
+        await sendPhoneNumberVerificationRequest(user);
+    }
+
+    @Mutation(returns => GraphQLVoid, { nullable: true })
     async verifyPhoneNumber(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { userId, otp }: VerifyPhoneNumberArgs,
@@ -48,12 +80,7 @@ export class CustomUserResolver {
         if (!user) {
             throw "User not found";
         }
-        if (user.otpCreatedAt.getTime() < new Date().getTime() - ms("5 minutes")) {
-            throw "OTP expired";
-        }
-        if (user?.otp !== parseInt(otp)) {
-            throw "OTP mismatch";
-        }
+        verifyPhoneNumber(user, otp);
         const result = await prisma.user.updateMany({
             where: {
                 id: userId,

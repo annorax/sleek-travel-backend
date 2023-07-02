@@ -1,4 +1,4 @@
-import { PrismaClient, User, Role } from '@prisma/client';
+import { User, Role } from "@prisma/client";
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -6,8 +6,10 @@ import { AuthCheckerInterface, ResolverData } from 'type-graphql';
 import { GraphQLContext } from "./context";
 import { createTransport } from "nodemailer";
 import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
+import ms from "ms";
 
 const emailVerificationLinkExpirationDuration = "1 hour";
+const phoneNumberVerificationOTPExpirationDuration = "5 minutes";
 
 const scryptAsync = promisify(scrypt);
 
@@ -32,8 +34,8 @@ export async function sendEmailVerificationRequest(user:User):Promise<void> {
         from: "Slim Travel <noreply@slim.travel>",
         to: `${user.name} <${user.email}>`,
         subject: "Account Activation",
-        text: `Simply visit ${url} to verify your email address and activate your account. This link expires in ${emailVerificationLinkExpirationDuration}.`,
-        html: `Simply click <a href="${url}">this link</a> to verify your email address and activate your account. This link expires in ${emailVerificationLinkExpirationDuration}.`
+        text: `Simply visit ${url} to verify your email address and activate your account. This link is valid for ${emailVerificationLinkExpirationDuration}.`,
+        html: `Simply click <a href="${url}">this link</a> to verify your email address and activate your account. This link is valid for ${emailVerificationLinkExpirationDuration}.`
     });
 }
 
@@ -41,7 +43,7 @@ export async function sendPhoneNumberVerificationRequest(user:User): Promise<voi
     await pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
         DestinationPhoneNumber: user.phoneNumber,
         OriginationIdentity: "Slim-Travel",
-        MessageBody: `Your SlimTravel OTP is ${user.otp.toString().padStart(6, "0")}`
+        MessageBody: `Your SlimTravel OTP is ${user.otp.toString().padStart(6, "0")} (valid for ${phoneNumberVerificationOTPExpirationDuration})`
     })).catch(err => console.error(err));;
 }
 
@@ -54,9 +56,8 @@ function createEmailVerificationToken(user: User): string {
 }
 
 export async function authenticateUser(
-    prisma: PrismaClient,
     request: Request
-): Promise<User | null> {
+): Promise<number | null> {
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
         return null;
@@ -67,13 +68,21 @@ export async function authenticateUser(
     }
     const token = tokenizedAuthHeader[1];
     const tokenPayload = verify(token, authSecret) as JwtPayload;
-    const userId = tokenPayload.userId;
-    return await prisma.user.findUnique({ where: { id: userId } });
+    return tokenPayload.userId;
 }
 
 export function verifyEmailAddress(token:string): number {
     const tokenPayload = verify(token, emailVerificationSecret) as JwtPayload;
     return tokenPayload.userId;
+}
+
+export function verifyPhoneNumber(user:User, otp:string): void {
+    if (user.otpCreatedAt.getTime() < new Date().getTime() - ms(phoneNumberVerificationOTPExpirationDuration)) {
+        throw "OTP expired";
+    }
+    if (user?.otp !== parseInt(otp)) {
+        throw "OTP mismatch";
+    }
 }
 
 export async function hashPassword(password: string) {
