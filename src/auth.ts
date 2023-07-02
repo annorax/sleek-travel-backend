@@ -3,15 +3,54 @@ import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { AuthCheckerInterface, ResolverData } from 'type-graphql';
-import { GraphQLContext } from './context';
+import { GraphQLContext } from "./context";
+import { createTransport } from "nodemailer";
+import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
+
+const emailVerificationLinkExpirationDuration = "1 hour";
 
 const scryptAsync = promisify(scrypt);
 
 const authSecret = <string>process.env.AUTH_SECRET;
 const emailVerificationSecret = <string>process.env.EMAIL_VERIFICATION_SECRET;
 
+const emailTransport = createTransport({
+    host: <string>process.env.SMTP_ENDPOINT_URL,
+    port: parseInt(<string>process.env.SMTP_ENDPOINT_PORT),
+    secure: true,
+    auth: {
+      user: <string>process.env.SMTP_USERNAME,
+      pass: <string>process.env.SMTP_PASSWORD
+    }
+});
+
+const pinpointSMSVoiceV2Client = new PinpointSMSVoiceV2Client({});
+
+export async function sendEmailVerificationRequest(user:User):Promise<void> {
+    const url = `${<string>process.env.CLIENT_BASE_URL}/verify-email?token=${createEmailVerificationToken(user)}`;
+    await emailTransport.sendMail({
+        from: "Slim Travel <noreply@slim.travel>",
+        to: `${user.name} <${user.email}>`,
+        subject: "Account Activation",
+        text: `Simply visit ${url} to verify your email address and activate your account. This link expires in ${emailVerificationLinkExpirationDuration}.`,
+        html: `Simply click <a href="${url}">this link</a> to verify your email address and activate your account. This link expires in ${emailVerificationLinkExpirationDuration}.`
+    });
+}
+
+export async function sendPhoneNumberVerificationRequest(user:User): Promise<void> {
+    await pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
+        DestinationPhoneNumber: user.phoneNumber,
+        OriginationIdentity: "Slim-Travel",
+        MessageBody: `Your SlimTravel OTP is ${user.otp.toString().padStart(6, "0")}`
+    })).catch(err => console.error(err));;
+}
+
 export function createAuthToken(user: User): string {
     return sign({ userId: user.id }, authSecret);
+}
+
+function createEmailVerificationToken(user: User): string {
+    return sign({ userId: user.id }, emailVerificationSecret, { expiresIn: emailVerificationLinkExpirationDuration });
 }
 
 export async function authenticateUser(
@@ -30,10 +69,6 @@ export async function authenticateUser(
     const tokenPayload = verify(token, authSecret) as JwtPayload;
     const userId = tokenPayload.userId;
     return await prisma.user.findUnique({ where: { id: userId } });
-}
-
-export function createEmailVerificationToken(user: User): string {
-    return sign({ userId: user.id }, emailVerificationSecret, { expiresIn: "1 hour" });
 }
 
 export function verifyEmailAddress(token:string): number {

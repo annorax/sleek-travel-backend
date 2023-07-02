@@ -2,16 +2,13 @@ import "reflect-metadata";
 import _ from "lodash";
 import { GraphQLContext } from './context';
 import { Resolver, Args, Ctx, Mutation } from "type-graphql";
-import { comparePassword, hashPassword, createAuthToken, verifyEmailAddress } from "./auth";
+import { comparePassword, hashPassword, createAuthToken, verifyEmailAddress, sendEmailVerificationRequest, sendPhoneNumberVerificationRequest } from "./auth";
 import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs } from "./types";
 import { Role, User } from "@prisma/client";
-import { sendEmailVerificationRequest } from "./mail";
 import { GraphQLVoid } from "graphql-scalars";
-import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
 import crypto from 'crypto';
 import ms from "ms";
 
-const pinpointSMSVoiceV2Client = new PinpointSMSVoiceV2Client({});
 function sanitizeUser(user:User): SafeUser {
     return _.omit(user, "password", "otp", "otpCreatedAt", "phoneNumberVerified", "emailVerified");
 }
@@ -35,14 +32,9 @@ export class CustomUserResolver {
                 role: Role.NORMAL,
             }
         });
-        const token = createAuthToken(user);
         sendEmailVerificationRequest(user).catch(err => console.error(err));
-        pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
-            DestinationPhoneNumber: phoneNumber,
-            OriginationIdentity: "Slim-Travel",
-            MessageBody: `Your SlimTravel OTP is ${otp.toString().padStart(6, "0")}`
-        })).catch(err => console.error(err));;
-        return { token, user: sanitizeUser(user) }
+        sendPhoneNumberVerificationRequest(user).catch(err => console.error(err));
+        return { token: createAuthToken(user), user: sanitizeUser(user) }
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
@@ -114,7 +106,6 @@ export class CustomUserResolver {
                 userId: user.id
             }
         });
-        const token = createAuthToken(user);
-        return { token, user: sanitizeUser(user) }
+        return { token: createAuthToken(user), user: sanitizeUser(user) }
     }
 }
