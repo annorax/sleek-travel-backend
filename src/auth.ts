@@ -2,11 +2,12 @@ import { User, Role } from "@prisma/client";
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { AuthCheckerInterface, ResolverData } from 'type-graphql';
+import { ArgsDictionary, AuthCheckerInterface, ResolverData } from 'type-graphql';
 import { GraphQLContext } from "./context";
 import { createTransport } from "nodemailer";
 import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
 import ms from "ms";
+import { GraphQLResolveInfo } from "graphql";
 
 const emailVerificationLinkExpirationDuration = "1 hour";
 const phoneNumberVerificationOTPExpirationDuration = "5 minutes";
@@ -106,9 +107,22 @@ export class CustomAuthChecker implements AuthCheckerInterface<GraphQLContext> {
         if (!context.currentUser) {
             return false;
         }
+        const { ownDataOnly } = info.parentType.getFields()[info.fieldName].extensions || {}
         if (!roles.length) {
+            return ownDataOnly ?  this.accessingOwnData(root, args, context, info) : true;
+        }
+        if (roles.indexOf(context.currentUser.role) === -1) {
+            return false;
+        }
+        if (!ownDataOnly) {
             return true;
         }
-        return roles.indexOf(context.currentUser.role) > -1;
+        return context.currentUser.role === Role.ADMIN || this.accessingOwnData(root, args, context, info);
     }
-  }
+    
+    private accessingOwnData(root: any, args: ArgsDictionary, context: GraphQLContext, info: GraphQLResolveInfo): boolean {
+        const userIdFilter = args?.where?.userId?.equals;
+        const currentUserId = context.currentUser?.id;
+        return userIdFilter && userIdFilter === currentUserId;
+    }
+}

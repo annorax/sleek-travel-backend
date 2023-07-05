@@ -1,11 +1,11 @@
 import "reflect-metadata";
-import { ProductCrudResolver, applyResolversEnhanceMap } from "@generated/type-graphql";
+import { ProductCrudResolver, ItemCrudResolver, applyResolversEnhanceMap } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
 import { createYoga } from 'graphql-yoga';
 import { createContext } from './context';
 import passport from 'passport';
-import { buildSchema, Authorized } from "type-graphql";
+import { buildSchema, Authorized, Extensions } from "type-graphql";
 import { CustomAuthChecker } from "./auth";
 import { Role } from "@prisma/client";
 import { CustomUserResolver } from "./resolvers";
@@ -17,11 +17,16 @@ async function main(): Promise<void> {
         Product: {
           _query: [Authorized()],
           _mutation: [Authorized(Role.ADMIN)]
-        }
+        },
+        Item: {
+            _query: [Authorized(), Extensions({ ownDataOnly: true })],
+            _mutation: [Authorized(), Extensions({ ownDataOnly: true })]
+        },
     });
     const schema = await buildSchema({
         resolvers: [
             CustomUserResolver,
+            ItemCrudResolver,
             ProductCrudResolver
         ],
         authChecker: CustomAuthChecker,

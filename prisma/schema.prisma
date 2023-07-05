@@ -2,63 +2,82 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 generator typegraphql {
-    provider = "typegraphql-prisma"
-    omitInputFieldsByDefault  = "createdAt,updatedAt"
-    omitOutputFieldsByDefault = "createdAt,updatedAt"
+  provider                  = "typegraphql-prisma"
+  omitInputFieldsByDefault  = "createdAt,updatedAt"
+  omitOutputFieldsByDefault = "createdAt,updatedAt"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
-    NORMAL
-    ADMIN
+  NORMAL
+  ADMIN
 }
 
 model User {
-    id                  Int       @id @default(autoincrement())
-    name                String
-    phoneNumber         String    @unique
-    otp                 Int
-    otpCreatedAt        DateTime
-    email               String    @unique
-    password            String
-    role                Role
-    phoneNumberVerified DateTime?
-    emailVerified       DateTime?
-    createdAt           DateTime  @default(now())
-    updatedAt           DateTime  @updatedAt
-    logins              Login[]
+  id                  Int       @id @default(autoincrement())
+  name                String
+  phoneNumber         String    @unique
+  otp                 Int
+  otpCreatedAt        DateTime
+  email               String    @unique
+  password            String
+  role                Role
+  phoneNumberVerified DateTime?
+  emailVerified       DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  logins              Login[]
+  items               Item[]
 }
 
 model Login {
-    id        Int       @id @default(autoincrement())
-    ipAddress String?   @db.Inet
-    user      User      @relation(fields: [userId], references: [id])
-    userId    Int
-    createdAt DateTime  @default(now())
+  id        Int      @id @default(autoincrement())
+  ipAddress String?  @db.Inet
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model Product {
-    id          Int       @id @default(autoincrement())
-    name        String
-    upc         String?
-    description String?
-    amazonASIN  String?
-    country     String?
-    brand       String?
-    model       String?
-    color       String?
-    weightInKgs Float?
-    widthInCms  Float?
-    heightInCms Float?
-    depthInCms  Float?
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+  id          Int      @id @default(autoincrement())
+  name        String
+  upc         String?
+  description String?
+  amazonASIN  String?
+  country     String?
+  brand       String?
+  model       String?
+  color       String?
+  weightInKgs Float?
+  widthInCms  Float?
+  heightInCms Float?
+  depthInCms  Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  items       Item[]
+}
+
+model Item {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  code        String   @unique
+  name        String
+  description String?
+  productId   Int?
+  product     Product? @relation(fields: [productId], references: [id])
+  weightInKgs Float?
+  widthInCms  Float?
+  heightInCms Float?
+  depthInCms  Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
