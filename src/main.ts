@@ -15,12 +15,12 @@ async function main(): Promise<void> {
     app.use(passport.initialize());
     applyResolversEnhanceMap({
         Product: {
-          _query: [Authorized()],
-          _mutation: [Authorized(Role.ADMIN)]
+            _query: [Authorized()],
+            _mutation: [Authorized(Role.ADMIN)]
         },
         Item: {
             _query: [Authorized(), Extensions({ ownDataOnly: true })],
-            _mutation: [Authorized(), Extensions({ ownDataOnly: true })]
+            _mutation: [Authorized(Role.ADMIN)]
         },
     });
     const schema = await buildSchema({
