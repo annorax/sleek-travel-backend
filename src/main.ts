@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ProductCrudResolver, ItemCrudResolver, applyResolversEnhanceMap } from "@generated/type-graphql";
+import { ProductCrudResolver, ItemCrudResolver, PurchaseOrderCrudResolver, applyResolversEnhanceMap } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
 import { createYoga } from 'graphql-yoga';
@@ -22,12 +22,17 @@ async function main(): Promise<void> {
             _query: [Authorized(), Extensions({ ownDataOnly: true })],
             _mutation: [Authorized(Role.ADMIN)]
         },
+        PurchaseOrder: {
+            _query: [Authorized(), Extensions({ ownDataOnly: true })],
+            _mutation: [Authorized(Role.ADMIN)]
+        },
     });
     const schema = await buildSchema({
         resolvers: [
             CustomUserResolver,
             ItemCrudResolver,
-            ProductCrudResolver
+            ProductCrudResolver,
+            PurchaseOrderCrudResolver
         ],
         authChecker: CustomAuthChecker,
         validate: true

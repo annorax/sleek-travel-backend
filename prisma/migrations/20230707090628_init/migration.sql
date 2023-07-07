@@ -4,6 +4,9 @@ CREATE TYPE "Role" AS ENUM ('NORMAL', 'ADMIN');
 -- CreateEnum
 CREATE TYPE "Currency" AS ENUM ('GBP');
 
+-- CreateEnum
+CREATE TYPE "PurchaseOrderStatus" AS ENUM ('SUBMITTED', 'PAID', 'ORDERED_FROM_VENDOR', 'FULFILLED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -73,6 +76,17 @@ CREATE TABLE "Item" (
     CONSTRAINT "Item_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "PurchaseOrder" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "price" MONEY NOT NULL,
+    "status" "PurchaseOrderStatus" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PurchaseOrder_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_phoneNumber_key" ON "User"("phoneNumber");
 
@@ -90,3 +104,6 @@ ALTER TABLE "Item" ADD CONSTRAINT "Item_userId_fkey" FOREIGN KEY ("userId") REFE
 
 -- AddForeignKey
 ALTER TABLE "Item" ADD CONSTRAINT "Item_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PurchaseOrder" ADD CONSTRAINT "PurchaseOrder_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

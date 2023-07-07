@@ -25,6 +25,13 @@ enum Currency {
   GBP
 }
 
+enum PurchaseOrderStatus {
+  SUBMITTED
+  PAID
+  ORDERED_FROM_VENDOR
+  FULFILLED
+}
+
 model User {
   id                  Int       @id @default(autoincrement())
   name                String
@@ -40,6 +47,7 @@ model User {
   updatedAt           DateTime  @updatedAt
   logins              Login[]
   items               Item[]
+  purchaseOrders      PurchaseOrder[]
 }
 
 model Login {
@@ -86,4 +94,13 @@ model Item {
   depthInCms  Float?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model PurchaseOrder {
+  id          Int                 @id @default(autoincrement())
+  userId      Int
+  price       Decimal             @db.Money
+  status      PurchaseOrderStatus
+  user        User                @relation(fields: [userId], references: [id])
+  createdAt   DateTime            @default(now())
 }
