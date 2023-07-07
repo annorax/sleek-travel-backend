@@ -50,8 +50,8 @@ CREATE TABLE "Product" (
     "widthInCms" DOUBLE PRECISION,
     "heightInCms" DOUBLE PRECISION,
     "depthInCms" DOUBLE PRECISION,
-    "currency" "Currency",
-    "price" MONEY,
+    "currency" "Currency" NOT NULL,
+    "price" MONEY NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -87,6 +87,19 @@ CREATE TABLE "PurchaseOrder" (
     CONSTRAINT "PurchaseOrder_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "PurchaseOrderEntry" (
+    "id" SERIAL NOT NULL,
+    "orderId" INTEGER NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "productId" INTEGER NOT NULL,
+    "currency" "Currency" NOT NULL,
+    "unitPrice" MONEY NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PurchaseOrderEntry_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_phoneNumber_key" ON "User"("phoneNumber");
 
@@ -107,3 +120,9 @@ ALTER TABLE "Item" ADD CONSTRAINT "Item_productId_fkey" FOREIGN KEY ("productId"
 
 -- AddForeignKey
 ALTER TABLE "PurchaseOrder" ADD CONSTRAINT "PurchaseOrder_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PurchaseOrderEntry" ADD CONSTRAINT "PurchaseOrderEntry_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "PurchaseOrder"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PurchaseOrderEntry" ADD CONSTRAINT "PurchaseOrderEntry_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

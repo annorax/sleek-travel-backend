@@ -59,24 +59,25 @@ model Login {
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
-  name        String
-  upc         String?
-  description String?
-  amazonASIN  String?
-  country     String?
-  brand       String?
-  model       String?
-  color       String?
-  weightInKgs Float?
-  widthInCms  Float?
-  heightInCms Float?
-  depthInCms  Float?
-  currency    Currency?
-  price       Decimal?  @db.Money
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  items       Item[]
+  id                    Int       @id @default(autoincrement())
+  name                  String
+  upc                   String?
+  description           String?
+  amazonASIN            String?
+  country               String?
+  brand                 String?
+  model                 String?
+  color                 String?
+  weightInKgs           Float?
+  widthInCms            Float?
+  heightInCms           Float?
+  depthInCms            Float?
+  currency              Currency
+  price                 Decimal   @db.Money
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  items                 Item[]
+  purchaseOrderEntries  PurchaseOrderEntry[]
 }
 
 model Item {
@@ -99,8 +100,21 @@ model Item {
 model PurchaseOrder {
   id          Int                 @id @default(autoincrement())
   userId      Int
+  user        User                @relation(fields: [userId], references: [id])
   price       Decimal             @db.Money
   status      PurchaseOrderStatus
-  user        User                @relation(fields: [userId], references: [id])
   createdAt   DateTime            @default(now())
+  entries     PurchaseOrderEntry[]
+}
+
+model PurchaseOrderEntry {
+  id          Int           @id @default(autoincrement())
+  orderId     Int
+  order       PurchaseOrder @relation(fields: [orderId], references: [id])
+  quantity    Int
+  productId   Int
+  product     Product       @relation(fields: [productId], references: [id])
+  currency    Currency
+  unitPrice   Decimal       @db.Money
+  createdAt   DateTime      @default(now())
 }
