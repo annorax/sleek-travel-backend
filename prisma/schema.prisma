@@ -21,6 +21,10 @@ enum Role {
   ADMIN
 }
 
+enum Currency {
+  GBP
+}
+
 model User {
   id                  Int       @id @default(autoincrement())
   name                String
@@ -47,7 +51,7 @@ model Login {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   upc         String?
   description String?
@@ -60,8 +64,10 @@ model Product {
   widthInCms  Float?
   heightInCms Float?
   depthInCms  Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  currency    Currency?
+  price       Decimal?  @db.Money
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   items       Item[]
 }
 

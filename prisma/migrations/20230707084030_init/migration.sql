@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('NORMAL', 'ADMIN');
 
+-- CreateEnum
+CREATE TYPE "Currency" AS ENUM ('GBP');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -44,6 +47,8 @@ CREATE TABLE "Product" (
     "widthInCms" DOUBLE PRECISION,
     "heightInCms" DOUBLE PRECISION,
     "depthInCms" DOUBLE PRECISION,
+    "currency" "Currency",
+    "price" MONEY,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
