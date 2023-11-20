@@ -37,7 +37,10 @@ async function main(): Promise<void> {
         authChecker: CustomAuthChecker,
         validate: true
     });
-    const yoga = createYoga({ schema, context: createContext });
+    const yoga = createYoga({
+        schema,
+        context: createContext
+    });
     app.use(yoga.graphqlEndpoint, yoga);
     app.listen(4000, () => {
         console.log('Running GraphQL API server at http://localhost:4000/graphql')
