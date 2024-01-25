@@ -1,0 +1,1 @@
+export const extractIpAddress = (request:any):string|null => request.headers['x-forwarded-for'] || request.socket.remoteAddress;

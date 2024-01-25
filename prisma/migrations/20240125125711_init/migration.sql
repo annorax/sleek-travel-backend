@@ -30,9 +30,18 @@ CREATE TABLE "Login" (
     "id" SERIAL NOT NULL,
     "ipAddress" INET,
     "userId" INTEGER NOT NULL,
+    "tokenValue" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Login_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AccessToken" (
+    "value" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
+
+    CONSTRAINT "AccessToken_pkey" PRIMARY KEY ("value")
 );
 
 -- CreateTable
@@ -111,6 +120,12 @@ CREATE UNIQUE INDEX "Item_code_key" ON "Item"("code");
 
 -- AddForeignKey
 ALTER TABLE "Login" ADD CONSTRAINT "Login_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Login" ADD CONSTRAINT "Login_tokenValue_fkey" FOREIGN KEY ("tokenValue") REFERENCES "AccessToken"("value") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AccessToken" ADD CONSTRAINT "AccessToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Item" ADD CONSTRAINT "Item_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,5 +1,4 @@
-import { PrismaClient, User } from "@prisma/client";
-import { authenticateUser } from "./auth";
+import { PrismaClient, AccessToken, User } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -12,8 +11,18 @@ export type GraphQLContext = {
 export async function createContext(
     initialContext: any
 ): Promise<GraphQLContext> {
-    const userId = await authenticateUser(initialContext.request);
-    const currentUser = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+    const authHeader = initialContext.request.headers.get('authorization');
+    let currentUser = null;
+    if (authHeader) {
+        const tokenizedAuthHeader = authHeader.split(' ');
+        if (tokenizedAuthHeader[0] === "Bearer") {
+            const tokenValue = tokenizedAuthHeader[1];
+            const token:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: tokenValue } });
+            const userId = token?.userId;
+            currentUser = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+        }
+    }
+    
     return {
         initialContext,
         prisma,

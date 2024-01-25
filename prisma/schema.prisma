@@ -46,16 +46,26 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   logins              Login[]
+  accessTokens        AccessToken[]
   items               Item[]
   purchaseOrders      PurchaseOrder[]
 }
 
 model Login {
-  id        Int      @id @default(autoincrement())
-  ipAddress String?  @db.Inet
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id          Int         @id @default(autoincrement())
+  ipAddress   String?     @db.Inet
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
+  tokenValue  String
+  accessToken AccessToken @relation(fields: [tokenValue], references: [value])
+  createdAt   DateTime @default(now())
+}
+
+model AccessToken {
+  value   String   @id
+  user    User     @relation(fields: [userId], references: [id])
+  userId  Int
+  logins  Login[]
 }
 
 model Product {

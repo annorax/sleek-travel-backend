@@ -1,4 +1,4 @@
-import { User, Role } from "@prisma/client";
+import { User, Role, PrismaClient } from "@prisma/client";
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -14,7 +14,6 @@ const phoneNumberVerificationOTPExpirationDuration = "5 minutes";
 
 const scryptAsync = promisify(scrypt);
 
-const authSecret = <string>process.env.AUTH_SECRET;
 const emailVerificationSecret = <string>process.env.EMAIL_VERIFICATION_SECRET;
 
 const emailTransport = createTransport({
@@ -48,28 +47,8 @@ export async function sendPhoneNumberVerificationRequest(user:User): Promise<voi
     })).catch(err => console.error(err));;
 }
 
-export function createAuthToken(user: User): string {
-    return sign({ userId: user.id }, authSecret);
-}
-
 function createEmailVerificationToken(user: User): string {
     return sign({ userId: user.id }, emailVerificationSecret, { expiresIn: emailVerificationLinkExpirationDuration });
-}
-
-export async function authenticateUser(
-    request: Request
-): Promise<number | null> {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-        return null;
-    }
-    const tokenizedAuthHeader = authHeader.split(' ');
-    if (tokenizedAuthHeader[0] !== "Bearer") {
-        return null;
-    }
-    const token = tokenizedAuthHeader[1];
-    const tokenPayload = verify(token, authSecret) as JwtPayload;
-    return tokenPayload.userId;
 }
 
 export function verifyEmailAddress(token:string): number {
@@ -100,6 +79,24 @@ export async function comparePassword(
     const hashedPasswordBuf = Buffer.from(hashedPassword, "hex");
     const suppliedPasswordBuf = (await scryptAsync(suppliedPassword, salt, 64)) as Buffer;
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
+}
+
+export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|null, userId:number):Promise<string> {
+    const tokenValue = randomBytes(64).toString("base64url");
+    await prisma.accessToken.create({
+        data: {
+            value: tokenValue,
+            userId: userId
+        }
+    });
+    await prisma.login.create({
+        data: {
+            ...(ipAddress ? { ipAddress } : {}),
+            userId: userId,
+            tokenValue: tokenValue
+        }
+    });
+    return tokenValue;
 }
 
 export class CustomAuthChecker implements AuthCheckerInterface<GraphQLContext> {
