@@ -8,9 +8,12 @@ import { createTransport } from "nodemailer";
 import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
 import ms from "ms";
 import { GraphQLResolveInfo } from "graphql";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const emailVerificationLinkExpirationDuration = "1 hour";
 const phoneNumberVerificationOTPExpirationDuration = "5 minutes";
+
+const maxLoginTokenGenerationAttempts = 10;
 
 const scryptAsync = promisify(scrypt);
 
@@ -83,12 +86,26 @@ export async function comparePassword(
 
 export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|null, userId:number):Promise<string> {
     const tokenValue = randomBytes(64).toString("base64url");
-    await prisma.accessToken.create({
-        data: {
-            value: tokenValue,
-            userId: userId
+    let retry:boolean;
+    let attempts = 0;
+    do {
+        retry = false;
+        attempts++;
+        try {
+            await prisma.accessToken.create({
+                data: {
+                    value: tokenValue,
+                    userId: userId
+                }
+            });
+        } catch (error) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") { // unique constraint violation
+                retry = true;
+            } else {
+                throw error;
+            }
         }
-    });
+    } while (retry && attempts <= maxLoginTokenGenerationAttempts);
     await prisma.login.create({
         data: {
             ...(ipAddress ? { ipAddress } : {}),
