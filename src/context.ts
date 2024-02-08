@@ -22,10 +22,5 @@ export async function createContext(
             currentUser = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
         }
     }
-    
-    return {
-        initialContext,
-        prisma,
-        currentUser
-    };
+    return { initialContext, prisma, currentUser };
 }
