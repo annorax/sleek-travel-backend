@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import _ from "lodash";
 import { GraphQLContext } from "./context";
-import { Resolver, Args, Ctx, Mutation } from "type-graphql";
+import { Resolver, Args, Ctx, Mutation, Query } from "type-graphql";
 import { comparePassword, createLoginAndToken, hashPassword, sendEmailVerificationRequest, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs } from "./types";
-import { Role, User } from "@prisma/client";
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload } from "./types";
+import { AccessToken, Role, User } from "@prisma/client";
 import { GraphQLVoid } from "graphql-scalars";
 import crypto from "crypto";
 import { extractIpAddress } from "./util";
@@ -130,5 +130,16 @@ export class CustomUserResolver {
         }
         const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id);
         return { token: tokenValue, user: sanitizeUser(user) }
+    }
+
+    @Query(returns => ValidateTokenPayload, { nullable: true })
+    async validateToken(
+        @Ctx() { initialContext, prisma }: GraphQLContext,
+        @Args() { tokenValue }: ValidateTokenArgs,
+    ) : Promise<ValidateTokenPayload | null> {
+        const token:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: tokenValue } });
+        const userId = token?.userId;
+        const user:User|null = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+        return { token: tokenValue, user: user ? sanitizeUser(user) : undefined }
     }
 }

@@ -1,5 +1,6 @@
 import { User } from "@generated/type-graphql";
 import { IsEmail, IsPhoneNumber, IsNumberString, Length } from "class-validator";
+import { isNullableType } from "graphql";
 import { Field, ArgsType, ObjectType } from "type-graphql";
 
 const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;
@@ -30,6 +31,12 @@ export class LogInUserArgs {
 
     @Field()
     password!: string;
+}
+
+@ArgsType()
+export class ValidateTokenArgs {
+    @Field()
+    tokenValue!: string;
 }
 
 @ArgsType()
@@ -77,4 +84,13 @@ export class LogInPayload {
 
     @Field()
     user!: SafeUser;
+}
+
+@ObjectType()
+export class ValidateTokenPayload {
+    @Field()
+    token!: string;
+
+    @Field({ nullable: true})
+    user?: SafeUser;
 }
