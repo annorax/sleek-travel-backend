@@ -31,6 +31,7 @@ CREATE TABLE "Login" (
     "ipAddress" INET,
     "userId" INTEGER NOT NULL,
     "tokenValue" TEXT NOT NULL,
+    "explicit" BOOLEAN NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Login_pkey" PRIMARY KEY ("id")

@@ -84,7 +84,7 @@ export async function comparePassword(
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
 }
 
-export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|null, userId:number):Promise<string> {
+export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|null, userId:number, explicit:boolean):Promise<string> {
     const tokenValue = randomBytes(64).toString("base64url");
     let retry:boolean;
     let attempts = 0;
@@ -110,7 +110,8 @@ export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|
         data: {
             ...(ipAddress ? { ipAddress } : {}),
             userId: userId,
-            tokenValue: tokenValue
+            tokenValue: tokenValue,
+            explicit: explicit
         }
     });
     return tokenValue;

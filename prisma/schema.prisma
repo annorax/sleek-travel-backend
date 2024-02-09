@@ -58,7 +58,8 @@ model Login {
   user        User        @relation(fields: [userId], references: [id])
   tokenValue  String
   accessToken AccessToken @relation(fields: [tokenValue], references: [value])
-  createdAt   DateTime @default(now())
+  explicit    Boolean
+  createdAt   DateTime    @default(now())
 }
 
 model AccessToken {

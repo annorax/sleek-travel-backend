@@ -91,6 +91,6 @@ export class ValidateTokenPayload {
     @Field()
     token!: string;
 
-    @Field({ nullable: true})
-    user?: SafeUser;
+    @Field()
+    user!: SafeUser;
 }

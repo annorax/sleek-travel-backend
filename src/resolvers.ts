@@ -34,7 +34,7 @@ export class CustomUserResolver {
         });
         sendEmailVerificationRequest(user).catch(err => console.error(err));
         sendPhoneNumberVerificationRequest(user).catch(err => console.error(err));
-        const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id);
+        const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
         return { token: tokenValue, user: sanitizeUser(user) }
     }
 
@@ -128,7 +128,7 @@ export class CustomUserResolver {
         if (!passwordsMatch) {
             return null;
         }
-        const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id);
+        const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
         return { token: tokenValue, user: sanitizeUser(user) }
     }
 
@@ -140,6 +140,10 @@ export class CustomUserResolver {
         const token:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: tokenValue } });
         const userId = token?.userId;
         const user:User|null = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
-        return { token: tokenValue, user: user ? sanitizeUser(user) : undefined }
+        if (!user) {
+            return null;
+        }
+        const newTokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, false);
+        return { token: newTokenValue, user: user }
     }
 }
