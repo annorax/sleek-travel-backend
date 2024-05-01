@@ -7,7 +7,6 @@ generator client {
 
 generator typegraphql {
   provider                  = "typegraphql-prisma"
-  omitInputFieldsByDefault  = "createdAt,updatedAt"
   omitOutputFieldsByDefault = "createdAt,updatedAt"
 }
 
