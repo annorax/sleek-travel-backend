@@ -93,6 +93,7 @@ CREATE TABLE "PurchaseOrder" (
     "price" MONEY NOT NULL,
     "status" "PurchaseOrderStatus" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "PurchaseOrder_pkey" PRIMARY KEY ("id")
 );

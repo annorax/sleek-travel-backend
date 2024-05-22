@@ -114,6 +114,7 @@ model PurchaseOrder {
   price       Decimal             @db.Money
   status      PurchaseOrderStatus
   createdAt   DateTime            @default(now())
+  updatedAt   DateTime  @updatedAt
   entries     PurchaseOrderEntry[]
 }
 
