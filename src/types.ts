@@ -1,6 +1,5 @@
 import { User } from "@generated/type-graphql";
 import { IsEmail, IsPhoneNumber, IsNumberString, Length } from "class-validator";
-import { isNullableType } from "graphql";
 import { Field, ArgsType, ObjectType } from "type-graphql";
 
 const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;

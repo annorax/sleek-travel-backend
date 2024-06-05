@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ProductCrudResolver, ItemCrudResolver, PurchaseOrderCrudResolver, applyResolversEnhanceMap } from "@generated/type-graphql";
+import { ProductCrudResolver, ItemCrudResolver, PurchaseOrderCrudResolver, PurchaseOrderRelationsResolver, applyResolversEnhanceMap } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
 import { createYoga } from 'graphql-yoga';
@@ -32,7 +32,8 @@ async function main(): Promise<void> {
             CustomUserResolver,
             ItemCrudResolver,
             ProductCrudResolver,
-            PurchaseOrderCrudResolver
+            PurchaseOrderCrudResolver,
+            PurchaseOrderRelationsResolver
         ],
         authChecker: CustomAuthChecker,
         validate: true
