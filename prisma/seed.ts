@@ -3,11 +3,10 @@ import { hashPassword } from '../src/auth'
 const prisma = new PrismaClient()
 const now = new Date();
 async function main() {
-  const ido = await prisma.user.upsert({
-    where: { email: 'alice@prisma.io' },
-    update: {},
-    create: {
-      email: 'ido.dovrat@gmail.com',
+  const idoEmail = 'ido.dovrat@gmail.com';
+  await prisma.user.create({
+    data: {
+      email: idoEmail,
       emailVerified: now,
       name: 'Ido Dovrat',
       phoneNumber: '+972544264831',
@@ -17,8 +16,14 @@ async function main() {
       password: await hashPassword('123456'),
       role: 'ADMIN'
     },
+  });
+  await prisma.product.create({
+    data: {
+      name: 'Robonen',
+      currency: 'GBP',
+      price: 10
+    },
   })
-  console.log({ ido })
 }
 main()
   .then(async () => {
