@@ -21,7 +21,7 @@ enum Role {
 }
 
 enum Currency {
-  GBP
+  USD
 }
 
 enum PurchaseOrderStatus {

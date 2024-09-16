@@ -2,7 +2,7 @@
 CREATE TYPE "Role" AS ENUM ('NORMAL', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "Currency" AS ENUM ('GBP');
+CREATE TYPE "Currency" AS ENUM ('USD');
 
 -- CreateEnum
 CREATE TYPE "PurchaseOrderStatus" AS ENUM ('SUBMITTED', 'PAID', 'ORDERED_FROM_VENDOR', 'FULFILLED');

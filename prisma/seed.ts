@@ -17,12 +17,19 @@ async function main() {
       role: 'ADMIN'
     },
   });
-  await prisma.product.create({
-    data: {
-      name: 'Robonen',
-      currency: 'GBP',
-      price: 10
-    },
+  await prisma.product.createMany({
+    data: [
+      {
+        name: 'Product A',
+        currency: 'USD',
+        price: 10
+      },
+      {
+        name: 'Product B',
+        currency: 'USD',
+        price: 20
+      },
+    ],
   })
 }
 main()
