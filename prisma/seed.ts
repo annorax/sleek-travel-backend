@@ -22,12 +22,14 @@ async function main() {
       {
         name: 'Product A',
         currency: 'USD',
-        price: 10
+        price: 10,
+        updatedAt: now
       },
       {
         name: 'Product B',
         currency: 'USD',
-        price: 20
+        price: 20,
+        updatedAt: new Date(now.getTime() - 1000)
       },
     ],
   })
