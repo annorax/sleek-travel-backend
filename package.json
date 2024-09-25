@@ -2,6 +2,10 @@
   "name": "slim-travel-backend",
   "version": "1.0.0",
   "main": "src/main.ts",
+  "engines" : { 
+    "npm" : ">=8.0.0 <9.0.0",
+    "node" : ">=20.0.0 <21.0.0"
+  },
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node-dev --exit-child --respawn src/main.ts",
     "start": "ts-node src/main.ts"
