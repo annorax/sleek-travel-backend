@@ -2,9 +2,9 @@
   "name": "slim-travel-backend",
   "version": "1.0.0",
   "main": "src/main.ts",
-  "engines" : { 
-    "npm" : ">=8.0.0 <9.0.0",
-    "node" : ">=20.0.0 <21.0.0"
+  "engines": {
+    "npm": ">=8.0.0 <9.0.0",
+    "node": ">=20.0.0 <21.0.0"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node-dev --exit-child --respawn src/main.ts",
@@ -14,7 +14,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-pinpoint-sms-voice-v2": "^3.664.0",
+    "@aws-sdk/client-pinpoint-sms-voice-v2": "^3.665.0",
     "@graphql-tools/schema": "^10.0.6",
     "bcryptjs": "^2.4.3",
     "class-validator": "^0.14.1",
