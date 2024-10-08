@@ -138,8 +138,10 @@ export class CustomUserResolver {
         @Args() { tokenValue }: ValidateTokenArgs,
     ) : Promise<ValidateTokenPayload | null> {
         const token:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: tokenValue } });
-        const userId = token?.userId;
-        const user:User|null = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+        if (token == null || token.expired) {
+            return null;
+        }
+        const user:User|null = await prisma.user.findUnique({ where: { id: token.userId } });
         if (!user) {
             return null;
         }
