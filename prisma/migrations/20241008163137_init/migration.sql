@@ -41,6 +41,7 @@ CREATE TABLE "Login" (
 CREATE TABLE "AccessToken" (
     "value" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
+    "expired" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "AccessToken_pkey" PRIMARY KEY ("value")
 );

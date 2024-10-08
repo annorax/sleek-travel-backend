@@ -144,6 +144,7 @@ export class CustomUserResolver {
             return null;
         }
         const newTokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, false);
+        await prisma.accessToken.update({ where: { value: tokenValue }, data: { expired: true }});
         return { token: newTokenValue, user: user }
     }
 }
