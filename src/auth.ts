@@ -123,25 +123,25 @@ export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|
 
 export class CustomAuthChecker implements AuthCheckerInterface<GraphQLContext> {
     check({ root, args, context, info }: ResolverData<GraphQLContext>, roles: Role[]) {
-        if (!context.currentUser) {
+        if (!context.user) {
             return false;
         }
         const { ownDataOnly } = info.parentType.getFields()[info.fieldName].extensions || {}
         if (!roles.length) {
             return ownDataOnly ?  this.accessingOwnData(root, args, context, info) : true;
         }
-        if (roles.indexOf(context.currentUser.role) === -1) {
+        if (roles.indexOf(context.user.role) === -1) {
             return false;
         }
         if (!ownDataOnly) {
             return true;
         }
-        return context.currentUser.role === Role.ADMIN || this.accessingOwnData(root, args, context, info);
+        return context.user.role === Role.ADMIN || this.accessingOwnData(root, args, context, info);
     }
     
     private accessingOwnData(root: any, args: ArgsDictionary, context: GraphQLContext, info: GraphQLResolveInfo): boolean {
         const userIdFilter = args?.where?.userId?.equals;
-        const currentUserId = context.currentUser?.id;
+        const currentUserId = context.user?.id;
         return userIdFilter && userIdFilter === currentUserId;
     }
 }
