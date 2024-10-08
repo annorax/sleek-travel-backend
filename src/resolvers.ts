@@ -133,7 +133,7 @@ export class CustomUserResolver {
     }
 
     @Authorized()
-    @Mutation({ nullable: true })
+    @Mutation(returns => GraphQLVoid)
     async logOutUser(
         @Ctx() { prisma, token }: GraphQLContext
     ) : Promise<void> {
