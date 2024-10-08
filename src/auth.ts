@@ -84,6 +84,10 @@ export async function comparePassword(
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
 }
 
+export async function expireAccessToken(prisma:PrismaClient, token:string) {
+    await prisma.accessToken.update({ where: { value: token }, data: { expired: true }});
+}
+
 export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|null, userId:number, explicit:boolean):Promise<string> {
     const tokenValue = randomBytes(64).toString("base64url");
     let retry:boolean;
