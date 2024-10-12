@@ -133,7 +133,7 @@ export class CustomUserResolver {
     }
 
     @Authorized()
-    @Mutation(returns => GraphQLVoid)
+    @Mutation(returns => GraphQLVoid, { nullable: true })
     async logOutUser(
         @Ctx() { prisma, token }: GraphQLContext
     ) : Promise<void> {
@@ -145,8 +145,8 @@ export class CustomUserResolver {
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { tokenValue }: ValidateTokenArgs,
     ) : Promise<ValidateTokenPayload | null> {
-        const token:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: tokenValue } });
-        if (token == null || token.expired) {
+        const token:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: tokenValue, expired: false } });
+        if (token == null) {
             return null;
         }
         const user:User|null = await prisma.user.findUnique({ where: { id: token.userId } });

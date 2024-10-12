@@ -19,7 +19,7 @@ export async function createContext(
         const tokenizedAuthHeader = authHeader.split(' ');
         if (tokenizedAuthHeader[0] === "Bearer") {
             token = tokenizedAuthHeader[1];
-            const tokenObject:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: token } });
+            const tokenObject:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: token, expired: false } });
             const userId = tokenObject?.userId;
             user = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
         }
