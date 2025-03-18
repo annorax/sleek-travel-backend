@@ -1,3 +1,9 @@
+* Create DB
+npx prisma db push
+
+* Seed DB
+npx prisma db seed
+
 Run this after changing `schema.prisma`:
 ```
 npx prisma migrate dev --name <migration name>
