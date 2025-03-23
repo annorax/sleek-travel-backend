@@ -6,9 +6,9 @@ import { ArgsDictionary, AuthCheckerInterface, ResolverData } from 'type-graphql
 import { GraphQLContext } from "./context";
 import { createTransport } from "nodemailer";
 import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
-import ms from "ms";
 import { GraphQLResolveInfo } from "graphql";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import parse from 'parse-duration'
 
 const emailVerificationLinkExpirationDuration = "1 hour";
 const phoneNumberVerificationOTPExpirationDuration = "5 minutes";
@@ -60,7 +60,8 @@ export function verifyEmailAddress(token:string): number {
 }
 
 export function verifyPhoneNumber(user:User, otp:string): void {
-    if (user.otpCreatedAt.getTime() < new Date().getTime() - ms(phoneNumberVerificationOTPExpirationDuration)) {
+    const phoneNumberVerificationOTPExpirationDurationInMs:number = parse(phoneNumberVerificationOTPExpirationDuration) ?? 0;
+    if (user.otpCreatedAt.getTime() < new Date().getTime() - phoneNumberVerificationOTPExpirationDurationInMs) {
         throw "OTP expired";
     }
     if (user?.otp !== parseInt(otp)) {
