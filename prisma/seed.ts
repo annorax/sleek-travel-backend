@@ -21,13 +21,13 @@ async function main() {
     data: [
       {
         name: 'Product A',
-        currency: 'USD',
+        currency: 'EUR',
         price: 10,
         updatedAt: now
       },
       {
         name: 'Product B',
-        currency: 'USD',
+        currency: 'EUR',
         price: 20,
         updatedAt: new Date(now.getTime() - 1000)
       },
