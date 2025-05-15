@@ -73,6 +73,7 @@ model Product {
   id                    Int       @id @default(autoincrement())
   name                  String
   upc                   String?
+  upcScanned            Boolean?
   description           String?
   amazonASIN            String?
   country               String?
