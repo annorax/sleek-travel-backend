@@ -8,7 +8,7 @@ import passport from 'passport';
 import { buildSchema, Authorized, Extensions } from "type-graphql";
 import { CustomAuthChecker } from "./auth";
 import { Role } from "@prisma/client";
-import { CustomUserResolver } from "./resolvers";
+import { CustomItemResolver, CustomProductResolver, CustomPurchaseOrderResolver, CustomUserResolver } from "./resolvers";
 
 async function main(): Promise<void> {
     const app = express();
@@ -30,6 +30,9 @@ async function main(): Promise<void> {
     const schema = await buildSchema({
         resolvers: [
             CustomUserResolver,
+            CustomItemResolver,
+            CustomProductResolver,
+            CustomPurchaseOrderResolver,
             ItemCrudResolver,
             ProductCrudResolver,
             PurchaseOrderCrudResolver,

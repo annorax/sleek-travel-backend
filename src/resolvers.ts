@@ -1,13 +1,15 @@
 import "reflect-metadata";
 import _ from "lodash";
+import { Prisma } from "@prisma/client";
 import { GraphQLContext } from "./context";
-import { Resolver, Args, Ctx, Mutation, Query, Authorized } from "type-graphql";
+import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg } from "type-graphql";
 import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailVerificationRequest, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload } from "./types";
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, FindManyProductArgs, FindManyPurchaseOrderArgs, FindManyItemArgs } from "./types";
 import { AccessToken, Role, User } from "@prisma/client";
 import { GraphQLVoid } from "graphql-scalars";
 import crypto from "crypto";
 import { extractIpAddress } from "./util";
+import { Item, Product, PurchaseOrder } from "@generated/type-graphql"
 
 const generateOTP = () => crypto.randomInt(0, 1000000);
 
@@ -156,5 +158,46 @@ export class CustomUserResolver {
         const newTokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, false);
         await expireAccessToken(prisma, tokenValue);
         return { token: newTokenValue, user: user }
+    }
+}
+
+@Resolver(of => Product)
+export class CustomProductResolver {
+    @Authorized()
+    @Query(returns => [Product])
+    async listAllProducts(
+        @Ctx() { prisma }: GraphQLContext,
+        @Args(() => FindManyProductArgs) {} : FindManyProductArgs,
+    ) : Promise<Product[]> {
+        const product1 = new Product();
+        product1.id = 100;
+        product1.name = "awe4rt";
+        product1.currency = "EUR";
+        product1.price = new Prisma.Decimal(100);
+        return [product1];
+    }
+}
+
+@Resolver(of => Item)
+export class CustomItemResolver {
+    @Authorized()
+    @Query(returns => [Item])
+    async listAllItems(
+        @Ctx() { prisma }: GraphQLContext,
+        @Args(() => FindManyItemArgs) {} : FindManyItemArgs,
+    ) : Promise<Item[]> {
+        return [];
+    }
+}
+
+@Resolver(of => PurchaseOrder)
+export class CustomPurchaseOrderResolver {
+    @Authorized()
+    @Query(returns => [PurchaseOrder])
+    async listAllPurchaseOrders(
+        @Ctx() { prisma }: GraphQLContext,
+        @Args(() => FindManyPurchaseOrderArgs) {} : FindManyPurchaseOrderArgs,
+    ) : Promise<PurchaseOrder[]> {
+        return [];
     }
 }
