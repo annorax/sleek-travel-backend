@@ -4,13 +4,14 @@ import { Prisma } from "@prisma/client";
 import { GraphQLContext } from "./context";
 import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg, Info } from "type-graphql";
 import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailVerificationRequest, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs } from "./types";
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput } from "./types";
 import { AccessToken, Role, User } from "@prisma/client";
 import { GraphQLVoid } from "graphql-scalars";
 import crypto from "crypto";
 import { extractIpAddress } from "./util";
 import { Item, Product, PurchaseOrder, FindManyProductResolver, FindManyProductArgs, ProductOrderByWithRelationInput } from "@generated/type-graphql"
 import { GraphQLResolveInfo } from "graphql";
+import stringify from "safe-stable-stringify";
 
 const generateOTP = () => crypto.randomInt(0, 1000000);
 
@@ -171,17 +172,37 @@ export class CustomProductResolver {
         @Info() info: GraphQLResolveInfo,
         @Args(() => STFindManyProductArgs) args : STFindManyProductArgs,
     ) : Promise<Product[]> {
+        console.log("Mark 1");
         const onwardArgs = new FindManyProductArgs();
-        onwardArgs.cursor = args.cursor;
-        onwardArgs.distinct = args.distinct;
-        onwardArgs.skip = args.skip;
-        onwardArgs.take = args.take;
-        onwardArgs.where = args.where;
-        onwardArgs.orderBy = args.orderBy?.map((entry) => {
-            const onwardEntry = new Map<string, any>();
-            onwardEntry.set(entry.field, entry.direction);
-            return JSON.parse(JSON.stringify(onwardEntry));
-        });
+        if (args.cursor) {
+            onwardArgs.cursor = args.cursor;
+        }
+        if (args.distinct) {
+            onwardArgs.distinct = args.distinct;
+        }
+        if (args.skip) {
+            onwardArgs.skip = args.skip;
+        }
+        if (args.take) {
+            onwardArgs.take = args.take;
+        }
+        if (args.where) {
+            onwardArgs.where = args.where;
+        }
+        if (args.orderBy) {
+            onwardArgs.orderBy = args.orderBy?.map((entry) => {
+                const onwardEntry = new Map<string, any>();
+                console.log(onwardEntry);
+                onwardEntry.set(entry.field, entry.direction);
+                console.log(onwardEntry);
+                console.log(JSON.parse(stringify(onwardEntry)));
+                console.log(JSON.parse(JSON.stringify(onwardEntry)) as ProductOrderByWithRelationInput);
+                new ProductOrderByWithRelationInput();
+                return JSON.parse(JSON.stringify(onwardEntry));
+            });
+        }
+        console.log(args);
+        console.log(onwardArgs);
         return new FindManyProductResolver().products(ctx, info, onwardArgs);
     }
 }
