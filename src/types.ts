@@ -97,16 +97,16 @@ export class ValidateTokenPayload {
 @InputType()
 export class STProductOrderByWithRelationInput {
     @Field(type => ProductScalarFieldEnum)
-    field?: "id" | "name" | "upc" | "upcScanned" | "description" | "amazonASIN" | "country" | "brand" | "model" | "color" | "weightInKgs" | "widthInCms" | "heightInCms" | "depthInCms" | "currency" | "price" | "createdAt" | "updatedAt" | undefined;
+    field!: "id" | "name" | "upc" | "upcScanned" | "description" | "amazonASIN" | "country" | "brand" | "model" | "color" | "weightInKgs" | "widthInCms" | "heightInCms" | "depthInCms" | "currency" | "price" | "createdAt" | "updatedAt";
 
     @Field(type => SortOrder, { nullable: true })
-    direction?: "asc" | "desc" | undefined;
+    direction: "asc" | "desc" | undefined;
 }
 
 @InputType()
 export class STItemOrderByWithRelationInput {
     @Field(type => ItemScalarFieldEnum)
-    field?: "id" | "userId" | "code" | "name" | "description" | "productId" | "weightInKgs" | "widthInCms" | "heightInCms" | "depthInCms" | "createdAt" | "updatedAt" | undefined;
+    field!: "id" | "userId" | "code" | "name" | "description" | "productId" | "weightInKgs" | "widthInCms" | "heightInCms" | "depthInCms" | "createdAt" | "updatedAt";
 
     @Field(type => SortOrder, { nullable: true })
     direction?: "asc" | "desc" | undefined;
@@ -115,14 +115,14 @@ export class STItemOrderByWithRelationInput {
 @InputType()
 export class STPurchaseOrderOrderByWithRelationInput {
     @Field(type => PurchaseOrderScalarFieldEnum)
-    field?: "id" | "userId" | "price" | "status" | "createdAt" | "updatedAt" | undefined;
+    field!: "id" | "userId" | "price" | "status" | "createdAt" | "updatedAt";
 
     @Field(type => SortOrder, { nullable: true })
     direction?: "asc" | "desc" | undefined;
 }
 
 @ArgsType()
-export class FindManyProductArgs {
+export class STFindManyProductArgs {
     @Field(type => ProductWhereInput, { nullable: true })
     where?: ProductWhereInput | undefined;
     
@@ -143,7 +143,7 @@ export class FindManyProductArgs {
 }
 
 @ArgsType()
-export class FindManyItemArgs {
+export class STFindManyItemArgs {
     @Field(type => ItemWhereInput, { nullable: true })
     where?: ItemWhereInput | undefined;
     
@@ -164,7 +164,7 @@ export class FindManyItemArgs {
 }
 
 @ArgsType()
-export class FindManyPurchaseOrderArgs {
+export class STFindManyPurchaseOrderArgs {
     @Field(type => PurchaseOrderWhereInput, { nullable: true })
     where?: PurchaseOrderWhereInput | undefined;
 

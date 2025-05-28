@@ -2,14 +2,15 @@ import "reflect-metadata";
 import _ from "lodash";
 import { Prisma } from "@prisma/client";
 import { GraphQLContext } from "./context";
-import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg } from "type-graphql";
+import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg, Info } from "type-graphql";
 import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailVerificationRequest, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, FindManyProductArgs, FindManyPurchaseOrderArgs, FindManyItemArgs } from "./types";
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs } from "./types";
 import { AccessToken, Role, User } from "@prisma/client";
 import { GraphQLVoid } from "graphql-scalars";
 import crypto from "crypto";
 import { extractIpAddress } from "./util";
-import { Item, Product, PurchaseOrder } from "@generated/type-graphql"
+import { Item, Product, PurchaseOrder, FindManyProductResolver, FindManyProductArgs, ProductOrderByWithRelationInput } from "@generated/type-graphql"
+import { GraphQLResolveInfo } from "graphql";
 
 const generateOTP = () => crypto.randomInt(0, 1000000);
 
@@ -166,15 +167,22 @@ export class CustomProductResolver {
     @Authorized()
     @Query(returns => [Product])
     async listAllProducts(
-        @Ctx() { prisma }: GraphQLContext,
-        @Args(() => FindManyProductArgs) {} : FindManyProductArgs,
+        @Ctx() ctx: GraphQLContext,
+        @Info() info: GraphQLResolveInfo,
+        @Args(() => STFindManyProductArgs) args : STFindManyProductArgs,
     ) : Promise<Product[]> {
-        const product1 = new Product();
-        product1.id = 100;
-        product1.name = "awe4rt";
-        product1.currency = "EUR";
-        product1.price = new Prisma.Decimal(100);
-        return [product1];
+        const onwardArgs = new FindManyProductArgs();
+        onwardArgs.cursor = args.cursor;
+        onwardArgs.distinct = args.distinct;
+        onwardArgs.skip = args.skip;
+        onwardArgs.take = args.take;
+        onwardArgs.where = args.where;
+        onwardArgs.orderBy = args.orderBy?.map((entry) => {
+            const onwardEntry = new Map<string, any>();
+            onwardEntry.set(entry.field, entry.direction);
+            return JSON.parse(JSON.stringify(onwardEntry));
+        });
+        return new FindManyProductResolver().products(ctx, info, onwardArgs);
     }
 }
 
@@ -184,7 +192,7 @@ export class CustomItemResolver {
     @Query(returns => [Item])
     async listAllItems(
         @Ctx() { prisma }: GraphQLContext,
-        @Args(() => FindManyItemArgs) {} : FindManyItemArgs,
+        @Args(() => STFindManyItemArgs) {} : STFindManyItemArgs,
     ) : Promise<Item[]> {
         return [];
     }
@@ -196,7 +204,7 @@ export class CustomPurchaseOrderResolver {
     @Query(returns => [PurchaseOrder])
     async listAllPurchaseOrders(
         @Ctx() { prisma }: GraphQLContext,
-        @Args(() => FindManyPurchaseOrderArgs) {} : FindManyPurchaseOrderArgs,
+        @Args(() => STFindManyPurchaseOrderArgs) {} : STFindManyPurchaseOrderArgs,
     ) : Promise<PurchaseOrder[]> {
         return [];
     }
