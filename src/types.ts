@@ -26,7 +26,7 @@ export class RegisterUserArgs {
 @ArgsType()
 export class LogInUserArgs {
     @Field()
-    email!: string;
+    emailOrPhone!: string;
 
     @Field()
     password!: string;

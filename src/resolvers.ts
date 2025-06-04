@@ -120,10 +120,13 @@ export class CustomUserResolver {
     @Mutation(returns => LogInPayload, { nullable: true })
     async logInUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
-        @Args() { email, password }: LogInUserArgs,
+        @Args() { emailOrPhone, password }: LogInUserArgs,
     ) : Promise<LogInPayload | null> {
         let user = await prisma.user.findFirst({
-            where: { email: email.toLowerCase() }
+            where: { OR: [
+                { email: emailOrPhone.toLowerCase() },
+                { phoneNumber: emailOrPhone.toLowerCase() }
+            ] }
         });
         if (!user) {
             return null;
