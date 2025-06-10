@@ -42,6 +42,17 @@ export async function sendEmailVerificationRequest(user:User):Promise<void> {
     });
 }
 
+export async function sendPasswordResetLink(user:User):Promise<void> {
+    const url = `${<string>process.env.CLIENT_BASE_URL}/reset-password?token=${createEmailVerificationToken(user)}`;
+    await emailTransport.sendMail({
+        from: "Slim Travel <noreply@slim.travel>",
+        to: `${user.name} <${user.email}>`,
+        subject: "Password Reset",
+        text: `Simply visit ${url} to reset your password. This link is valid for ${emailVerificationLinkExpirationDuration}.`,
+        html: `Simply click <a href="${url}">this link</a> to reset your password. This link is valid for ${emailVerificationLinkExpirationDuration}.`
+    });
+}
+
 export async function sendPhoneNumberVerificationRequest(user:User): Promise<void> {
     await pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
         DestinationPhoneNumber: user.phoneNumber,
