@@ -48,6 +48,15 @@ export class ResendEmailVerificationRequestArgs {
 }
 
 @ArgsType()
+export class ResendPasswordResetLinkArgs {
+    @Field()
+    @IsEmail({
+        allow_display_name: true
+    })
+    email!: string;
+}
+
+@ArgsType()
 export class ResendPhoneNumberVerificationRequestArgs {
     @Field()
     @IsPhoneNumber()

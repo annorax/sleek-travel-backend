@@ -3,8 +3,8 @@ import _ from "lodash";
 import { Prisma } from "@prisma/client";
 import { GraphQLContext } from "./context";
 import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg, Info } from "type-graphql";
-import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailVerificationRequest, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput } from "./types";
+import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailVerificationRequest, sendPasswordResetLink, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
+import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput, ResendPasswordResetLinkArgs } from "./types";
 import { AccessToken, Role, User } from "@prisma/client";
 import { GraphQLVoid } from "graphql-scalars";
 import crypto from "crypto";
@@ -53,6 +53,19 @@ export class CustomUserResolver {
             throw "User not found";
         }
         await sendEmailVerificationRequest(user);
+    }
+
+    @Mutation(returns => GraphQLVoid, { nullable: true })
+    async resendPasswordResetLink(@Ctx() { initialContext, prisma }: GraphQLContext,
+        @Args() { email }: ResendPasswordResetLinkArgs,
+    ) : Promise<void> {
+        const user = await prisma.user.findUnique({
+            where: { email: email.toLowerCase() }
+        });
+        if (!user) {
+            throw "User not found";
+        }
+        await sendPasswordResetLink(user);
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
