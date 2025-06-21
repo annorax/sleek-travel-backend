@@ -10,14 +10,15 @@ import { GraphQLResolveInfo } from "graphql";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import parse from 'parse-duration'
 
-const emailVerificationLinkExpirationDuration = "1 hour";
+const linkExpirationDuration = "1 hour";
 const phoneNumberVerificationOTPExpirationDuration = "5 minutes";
+const from = "Sleek Travel <noreply@sleek.travel>";
 
 const maxLoginTokenGenerationAttempts = 10;
 
 const scryptAsync = promisify(scrypt);
 
-const emailVerificationSecret = <string>process.env.EMAIL_VERIFICATION_SECRET;
+const tokenSecret = <string>process.env.TOKEN_SECRET;
 
 const emailTransport = createTransport({
     host: <string>process.env.SMTP_ENDPOINT_URL,
@@ -32,24 +33,24 @@ const emailTransport = createTransport({
 const pinpointSMSVoiceV2Client = new PinpointSMSVoiceV2Client({});
 
 export async function sendEmailVerificationRequest(user:User):Promise<void> {
-    const url = `${<string>process.env.CLIENT_BASE_URL}/verify-email?token=${createEmailVerificationToken(user)}`;
+    const url = `${<string>process.env.CLIENT_BASE_URL}/verify-email?token=${createToken(user)}`;
     await emailTransport.sendMail({
-        from: "Slim Travel <noreply@slim.travel>",
+        from: from,
         to: `${user.name} <${user.email}>`,
         subject: "Account Activation",
-        text: `Simply visit ${url} to verify your email address and activate your account. This link is valid for ${emailVerificationLinkExpirationDuration}.`,
-        html: `Simply click <a href="${url}">this link</a> to verify your email address and activate your account. This link is valid for ${emailVerificationLinkExpirationDuration}.`
+        text: `Simply visit ${url} to verify your email address and activate your account. This link is valid for ${linkExpirationDuration}.`,
+        html: `Simply click <a href="${url}">this link</a> to verify your email address and activate your account. This link is valid for ${linkExpirationDuration}.`
     });
 }
 
 export async function sendPasswordResetLink(user:User):Promise<void> {
-    const url = `${<string>process.env.CLIENT_BASE_URL}/reset-password?token=${createEmailVerificationToken(user)}`;
+    const url = `${<string>process.env.CLIENT_BASE_URL}/reset-password?token=${createToken(user)}`;
     await emailTransport.sendMail({
-        from: "Slim Travel <noreply@slim.travel>",
+        from: from,
         to: `${user.name} <${user.email}>`,
         subject: "Password Reset",
-        text: `Simply visit ${url} to reset your password. This link is valid for ${emailVerificationLinkExpirationDuration}.`,
-        html: `Simply click <a href="${url}">this link</a> to reset your password. This link is valid for ${emailVerificationLinkExpirationDuration}.`
+        text: `Simply visit ${url} to reset your password. This link is valid for ${linkExpirationDuration}.`,
+        html: `Simply click <a href="${url}">this link</a> to reset your password. This link is valid for ${linkExpirationDuration}.`
     });
 }
 
@@ -61,12 +62,12 @@ export async function sendPhoneNumberVerificationRequest(user:User): Promise<voi
     })).catch(err => console.error(err));;
 }
 
-function createEmailVerificationToken(user: User): string {
-    return sign({ userId: user.id }, emailVerificationSecret, { expiresIn: emailVerificationLinkExpirationDuration });
+function createToken(user: User): string {
+    return sign({ userId: user.id }, tokenSecret, { expiresIn: linkExpirationDuration });
 }
 
 export function verifyEmailAddress(token:string): number {
-    const tokenPayload = verify(token, emailVerificationSecret) as JwtPayload;
+    const tokenPayload = verify(token, tokenSecret) as JwtPayload;
     return tokenPayload.userId;
 }
 
