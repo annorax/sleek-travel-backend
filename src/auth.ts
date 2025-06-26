@@ -12,7 +12,9 @@ import parse from 'parse-duration'
 
 const linkExpirationDuration = "1 hour";
 const phoneNumberVerificationOTPExpirationDuration = "5 minutes";
-const from = "Sleek Travel <noreply@sleek.travel>";
+const appName = "SleekTravel";
+const originationIdentity = "Sleek-Travel";
+const from = `${appName} <noreply@sleek.travel>`;
 
 const maxLoginTokenGenerationAttempts = 10;
 
@@ -37,28 +39,37 @@ export async function sendEmailVerificationRequest(user:User):Promise<void> {
     await emailTransport.sendMail({
         from: from,
         to: `${user.name} <${user.email}>`,
-        subject: "Account Activation",
+        subject: `${appName} Account Activation`,
         text: `Simply visit ${url} to verify your email address and activate your account. This link is valid for ${linkExpirationDuration}.`,
         html: `Simply click <a href="${url}">this link</a> to verify your email address and activate your account. This link is valid for ${linkExpirationDuration}.`
     });
 }
 
-export async function sendPasswordResetLink(user:User):Promise<void> {
+export async function sendEmailPasswordResetLink(user:User):Promise<void> {
     const url = `${<string>process.env.CLIENT_BASE_URL}/reset-password?token=${createToken(user)}`;
     await emailTransport.sendMail({
         from: from,
         to: `${user.name} <${user.email}>`,
-        subject: "Password Reset",
+        subject: `${appName} Password Reset`,
         text: `Simply visit ${url} to reset your password. This link is valid for ${linkExpirationDuration}.`,
         html: `Simply click <a href="${url}">this link</a> to reset your password. This link is valid for ${linkExpirationDuration}.`
     });
 }
 
+export async function sendPhoneNumberPasswordResetLink(user:User): Promise<void> {
+    const url = `${<string>process.env.CLIENT_BASE_URL}/reset-password?token=${createToken(user)}`;
+    await pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
+        DestinationPhoneNumber: user.phoneNumber,
+        OriginationIdentity: originationIdentity,
+        MessageBody: `To reset your ${appName} password please visit this link: ${url} (valid for ${linkExpirationDuration})`
+    })).catch(err => console.error(err));;
+}
+
 export async function sendPhoneNumberVerificationRequest(user:User): Promise<void> {
     await pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
         DestinationPhoneNumber: user.phoneNumber,
-        OriginationIdentity: "Slim-Travel",
-        MessageBody: `Your SlimTravel OTP is ${user.otp.toString().padStart(6, "0")} (valid for ${phoneNumberVerificationOTPExpirationDuration})`
+        OriginationIdentity: originationIdentity,
+        MessageBody: `Your ${appName} OTP is ${user.otp.toString().padStart(6, "0")} (valid for ${phoneNumberVerificationOTPExpirationDuration})`
     })).catch(err => console.error(err));;
 }
 

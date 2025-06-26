@@ -3,7 +3,7 @@ import _ from "lodash";
 import { Prisma } from "@prisma/client";
 import { GraphQLContext } from "./context";
 import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg, Info } from "type-graphql";
-import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailVerificationRequest, sendPasswordResetLink, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
+import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailPasswordResetLink, sendEmailVerificationRequest, sendPhoneNumberPasswordResetLink, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
 import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput, ResendPasswordResetLinkArgs } from "./types";
 import { AccessToken, Role, User } from "@prisma/client";
 import { GraphQLVoid } from "graphql-scalars";
@@ -57,15 +57,19 @@ export class CustomUserResolver {
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
     async resendPasswordResetLink(@Ctx() { initialContext, prisma }: GraphQLContext,
-        @Args() { email }: ResendPasswordResetLinkArgs,
+        @Args() { emailOrPhone }: ResendPasswordResetLinkArgs,
     ) : Promise<void> {
-        const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
+        const user = await prisma.user.findFirst({
+            where: { OR: [
+                { email: emailOrPhone.toLowerCase() },
+                { phoneNumber: emailOrPhone.toLowerCase() }
+            ] }
         });
         if (!user) {
             throw "User not found";
         }
-        await sendPasswordResetLink(user);
+        await sendEmailPasswordResetLink(user);
+        await sendPhoneNumberPasswordResetLink(user);
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
