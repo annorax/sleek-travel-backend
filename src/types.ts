@@ -48,7 +48,7 @@ export class ResendEmailVerificationRequestArgs {
 }
 
 @ArgsType()
-export class ResendPasswordResetLinkArgs {
+export class SendPasswordResetLinkArgs {
     @Field()
     emailOrPhone!: string;
 }
