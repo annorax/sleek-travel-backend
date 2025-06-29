@@ -61,7 +61,7 @@ export async function sendPhoneNumberPasswordResetLink(user:User): Promise<void>
     await pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
         DestinationPhoneNumber: user.phoneNumber,
         OriginationIdentity: originationIdentity,
-        MessageBody: `To reset your ${appName} password please visit this link: ${url} (valid for ${linkExpirationDuration})`
+        MessageBody: `To reset your ${appName} password please visit this link (valid for ${linkExpirationDuration}): ${url}`
     })).catch(err => console.error(err));;
 }
 
