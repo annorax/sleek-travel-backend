@@ -13,7 +13,7 @@ import parse from 'parse-duration'
 const linkExpirationDuration = "1 hour";
 const phoneNumberVerificationOTPExpirationDuration = "5 minutes";
 const appName = "SleekTravel";
-const originationIdentity = "Sleek-Travel";
+const originationIdentity = "SleekTravel";
 const from = `${appName} <noreply@sleek.travel>`;
 
 const maxLoginTokenGenerationAttempts = 10;
