@@ -109,9 +109,6 @@ export class CustomUserResolver {
             },
             data: { phoneNumberVerified: new Date() }
         });
-        if (!result.count) {
-            throw "Already verified";
-        }
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
