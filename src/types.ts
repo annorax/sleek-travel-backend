@@ -1,5 +1,6 @@
 import { ItemScalarFieldEnum, ItemWhereInput, ItemWhereUniqueInput, ProductScalarFieldEnum, ProductWhereInput, ProductWhereUniqueInput, PurchaseOrderScalarFieldEnum, PurchaseOrderWhereInput, PurchaseOrderWhereUniqueInput, SortOrder, User } from "@generated/type-graphql";
 import { IsEmail, IsPhoneNumber, IsNumberString, Length } from "class-validator";
+import { GraphQLBigInt } from "graphql-scalars";
 import { Field, ArgsType, ObjectType, InputType, Int } from "type-graphql";
 
 const Omit = <T, K extends keyof T>(Class: new () => T, keys: K[]): new () => Omit<T, typeof keys[number]> => Class;
@@ -68,7 +69,7 @@ export class VerifyEmailAddressArgs {
 
 @ArgsType()
 export class VerifyPhoneNumberArgs {
-    @Field()
+    @Field(() => GraphQLBigInt)
     userId!: bigint;
 
     @Field()
