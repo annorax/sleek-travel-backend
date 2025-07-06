@@ -19,11 +19,11 @@ const sanitizeUser = (user:User): SafeUser => _.omit(user, "password", "otp", "o
 
 @Resolver(of => SafeUser)
 export class CustomUserResolver {
-    @Mutation(returns => GraphQLBigInt)
+    @Mutation(returns => GraphQLVoid)
     async registerUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { name, phoneNumber, email, password }: RegisterUserArgs,
-    ) : Promise<bigint> {
+    ) : Promise<void> {
         const otp = generateOTP();
         const user = await prisma.user.create({
             data: {
@@ -36,9 +36,8 @@ export class CustomUserResolver {
                 role: Role.NORMAL,
             }
         });
-        sendEmailVerificationRequest(user).catch(err => console.error(err));
-        sendPhoneNumberVerificationRequest(user).catch(err => console.error(err));
-        return user.id;
+        await sendEmailVerificationRequest(user).catch(err => console.error(err));
+        await sendPhoneNumberVerificationRequest(user).catch(err => console.error(err));
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
