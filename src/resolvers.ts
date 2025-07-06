@@ -19,7 +19,7 @@ const sanitizeUser = (user:User): SafeUser => _.omit(user, "password", "otp", "o
 
 @Resolver(of => SafeUser)
 export class CustomUserResolver {
-    @Mutation(returns => GraphQLVoid)
+    @Mutation(returns => GraphQLVoid, { nullable: true })
     async registerUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { name, phoneNumber, email, password }: RegisterUserArgs,
@@ -157,6 +157,7 @@ export class CustomUserResolver {
             return { error: "Unverified phopne number." };
         }
         const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
+        const sanitizedUser = sanitizeUser(user);
         return { token: tokenValue, user: sanitizeUser(user) }
     }
 

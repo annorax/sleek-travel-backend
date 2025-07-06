@@ -74,7 +74,7 @@ export async function sendPhoneNumberVerificationRequest(user:User): Promise<voi
 }
 
 function createToken(user: User): string {
-    return sign({ userId: user.id }, tokenSecret, { expiresIn: linkExpirationDuration });
+    return sign({ userId: user.id.toString() }, tokenSecret, { expiresIn: linkExpirationDuration });
 }
 
 export function verifyEmailAddress(token:string): number {
