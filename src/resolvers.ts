@@ -132,11 +132,11 @@ export class CustomUserResolver {
         }
     }
 
-    @Mutation(returns => LogInPayload, { nullable: true })
+    @Mutation(returns => LogInPayload)
     async logInUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { emailOrPhone, password }: LogInUserArgs,
-    ) : Promise<LogInPayload | null> {
+    ) : Promise<LogInPayload> {
         let user = await prisma.user.findFirst({
             where: { OR: [
                 { email: emailOrPhone.toLowerCase() },
@@ -144,11 +144,17 @@ export class CustomUserResolver {
             ] }
         });
         if (!user) {
-            return null;
+            return { error: "No user account matches the provided email address or phone number." };
         }
         const passwordsMatch: boolean = await comparePassword(user.password, password);
         if (!passwordsMatch) {
-            return null;
+            return { error: "Incorrect password." };
+        }
+        if (!user.emailVerified) {
+            return { error: "Unverified email address." };
+        }
+        if (!user.phoneNumberVerified) {
+            return { error: "Unverified phopne number." };
         }
         const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
         return { token: tokenValue, user: sanitizeUser(user) }

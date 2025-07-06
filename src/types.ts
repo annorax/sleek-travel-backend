@@ -85,10 +85,13 @@ export class SafeUser extends Omit(User, ["password", "otp", "otpCreatedAt", "ph
 @ObjectType()
 export class LogInPayload {
     @Field()
-    token!: string;
+    error?: string;
+    
+    @Field()
+    token?: string;
 
     @Field()
-    user!: SafeUser;
+    user?: SafeUser;
 }
 
 @ObjectType()
