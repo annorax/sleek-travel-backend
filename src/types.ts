@@ -69,7 +69,7 @@ export class VerifyEmailAddressArgs {
 @ArgsType()
 export class VerifyPhoneNumberArgs {
     @Field()
-    userId!: number;
+    userId!: bigint;
 
     @Field()
     @IsNumberString({
