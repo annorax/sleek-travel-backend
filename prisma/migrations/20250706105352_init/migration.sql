@@ -9,7 +9,7 @@ CREATE TYPE "PurchaseOrderStatus" AS ENUM ('SUBMITTED', 'PAID', 'ORDERED_FROM_VE
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" SERIAL NOT NULL,
+    "id" BIGSERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "phoneNumber" TEXT NOT NULL,
     "otp" INTEGER NOT NULL,
@@ -27,9 +27,9 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "Login" (
-    "id" SERIAL NOT NULL,
+    "id" BIGSERIAL NOT NULL,
     "ipAddress" INET,
-    "userId" INTEGER NOT NULL,
+    "userId" BIGINT NOT NULL,
     "tokenValue" TEXT NOT NULL,
     "explicit" BOOLEAN NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -40,7 +40,7 @@ CREATE TABLE "Login" (
 -- CreateTable
 CREATE TABLE "AccessToken" (
     "value" TEXT NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" BIGINT NOT NULL,
     "expired" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "AccessToken_pkey" PRIMARY KEY ("value")
@@ -48,9 +48,10 @@ CREATE TABLE "AccessToken" (
 
 -- CreateTable
 CREATE TABLE "Product" (
-    "id" SERIAL NOT NULL,
+    "id" BIGSERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "upc" TEXT,
+    "upcScanned" BOOLEAN,
     "description" TEXT,
     "amazonASIN" TEXT,
     "country" TEXT,
@@ -71,12 +72,12 @@ CREATE TABLE "Product" (
 
 -- CreateTable
 CREATE TABLE "Item" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "id" BIGSERIAL NOT NULL,
+    "userId" BIGINT NOT NULL,
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "productId" INTEGER,
+    "productId" BIGINT,
     "weightInKgs" DOUBLE PRECISION,
     "widthInCms" DOUBLE PRECISION,
     "heightInCms" DOUBLE PRECISION,
@@ -89,8 +90,8 @@ CREATE TABLE "Item" (
 
 -- CreateTable
 CREATE TABLE "PurchaseOrder" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "id" BIGSERIAL NOT NULL,
+    "userId" BIGINT NOT NULL,
     "price" MONEY NOT NULL,
     "status" "PurchaseOrderStatus" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -101,10 +102,10 @@ CREATE TABLE "PurchaseOrder" (
 
 -- CreateTable
 CREATE TABLE "PurchaseOrderEntry" (
-    "id" SERIAL NOT NULL,
-    "orderId" INTEGER NOT NULL,
+    "id" BIGSERIAL NOT NULL,
+    "orderId" BIGINT NOT NULL,
     "quantity" INTEGER NOT NULL,
-    "productId" INTEGER NOT NULL,
+    "productId" BIGINT NOT NULL,
     "currency" "Currency" NOT NULL,
     "unitPrice" MONEY NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -6,7 +6,7 @@ import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg, Info } from "typ
 import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailPasswordResetLink, sendEmailVerificationRequest, sendPhoneNumberPasswordResetLink, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
 import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput, SendPasswordResetLinkArgs } from "./types";
 import { AccessToken, Role, User } from "@prisma/client";
-import { GraphQLVoid } from "graphql-scalars";
+import { GraphQLBigInt, GraphQLLong, GraphQLVoid } from "graphql-scalars";
 import crypto from "crypto";
 import { extractIpAddress } from "./util";
 import { Item, Product, PurchaseOrder, FindManyProductResolver, FindManyProductArgs, FindManyItemArgs, FindManyItemResolver, FindManyPurchaseOrderResolver, FindManyPurchaseOrderArgs } from "@generated/type-graphql"
@@ -19,11 +19,11 @@ const sanitizeUser = (user:User): SafeUser => _.omit(user, "password", "otp", "o
 
 @Resolver(of => SafeUser)
 export class CustomUserResolver {
-    @Mutation(returns => LogInPayload)
+    @Mutation(returns => GraphQLBigInt)
     async registerUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { name, phoneNumber, email, password }: RegisterUserArgs,
-    ) : Promise<LogInPayload> {
+    ) : Promise<bigint> {
         const otp = generateOTP();
         const user = await prisma.user.create({
             data: {
@@ -38,8 +38,7 @@ export class CustomUserResolver {
         });
         sendEmailVerificationRequest(user).catch(err => console.error(err));
         sendPhoneNumberVerificationRequest(user).catch(err => console.error(err));
-        const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
-        return { token: tokenValue, user: sanitizeUser(user) }
+        return user.id;
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
