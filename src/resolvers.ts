@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { GraphQLContext } from "./context";
 import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg, Info } from "type-graphql";
 import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailPasswordResetLink, sendEmailVerificationRequest, sendPhoneNumberPasswordResetLink, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
-import { LogInUserArgs, LogInPayload, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenPayload, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput, SendPasswordResetLinkArgs } from "./types";
+import { LogInUserArgs, LogInUserResponse, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenResponse, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput, SendPasswordResetLinkArgs, RegisterUserResponse } from "./types";
 import { AccessToken, Role, User } from "@prisma/client";
 import { GraphQLBigInt, GraphQLLong, GraphQLVoid } from "graphql-scalars";
 import crypto from "crypto";
@@ -19,11 +19,12 @@ const sanitizeUser = (user:User): SafeUser => _.omit(user, "password", "otp", "o
 
 @Resolver(of => SafeUser)
 export class CustomUserResolver {
-    @Mutation(returns => GraphQLBigInt, { nullable: true })
+    @Mutation(returns => RegisterUserResponse)
     async registerUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { name, phoneNumber, email, password }: RegisterUserArgs,
-    ) : Promise<BigInt> {
+    ) : Promise<RegisterUserResponse> {
+        const failures : Array<string> = [];
         const otp = generateOTP();
         const user = await prisma.user.create({
             data: {
@@ -36,9 +37,22 @@ export class CustomUserResolver {
                 role: Role.NORMAL,
             }
         });
-        await sendEmailVerificationRequest(user).catch(err => console.error(err));
-        await sendPhoneNumberVerificationRequest(user).catch(err => console.error(err));
-        return user.id;
+        try {
+            await sendEmailVerificationRequest(user);
+        } catch (err) {
+            failures.push('email');
+            console.error(err);
+        }
+        try {
+            await sendPhoneNumberVerificationRequest(user).catch(err => console.error(err));
+        } catch (err) {
+            failures.push('SMS');
+            console.error(err);
+        }
+        if (failures.length) {
+            return {error: `Failed to send ${failures.join(' and ')}`};
+        }
+        return { userId: user.id };
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
@@ -130,11 +144,11 @@ export class CustomUserResolver {
         }
     }
 
-    @Mutation(returns => LogInPayload)
+    @Mutation(returns => LogInUserResponse)
     async logInUser(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { emailOrPhone, password }: LogInUserArgs,
-    ) : Promise<LogInPayload> {
+    ) : Promise<LogInUserResponse> {
         let user = await prisma.user.findFirst({
             where: { OR: [
                 { email: emailOrPhone.toLowerCase() },
@@ -152,7 +166,7 @@ export class CustomUserResolver {
             return { error: "Unverified email address." };
         }
         if (!user.phoneNumberVerified) {
-            return { error: "Unverified phopne number." };
+            return { error: "Unverified phone number." };
         }
         const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
         const sanitizedUser = sanitizeUser(user);
@@ -167,18 +181,18 @@ export class CustomUserResolver {
         await expireAccessToken(prisma, token!);
     }
 
-    @Mutation(returns => ValidateTokenPayload, { nullable: true })
+    @Mutation(returns => ValidateTokenResponse)
     async validateToken(
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { tokenValue }: ValidateTokenArgs,
-    ) : Promise<ValidateTokenPayload | null> {
+    ) : Promise<ValidateTokenResponse> {
         const token:AccessToken|null = await prisma.accessToken.findUnique({ where: { value: tokenValue, expired: false } });
         if (token == null) {
-            return null;
+            return { error: "Token not found" };
         }
         const user:User|null = await prisma.user.findUnique({ where: { id: token.userId } });
         if (!user) {
-            return null;
+            return { error: "User not found" };
         }
         const newTokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, false);
         await expireAccessToken(prisma, tokenValue);

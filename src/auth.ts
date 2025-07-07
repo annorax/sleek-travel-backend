@@ -58,19 +58,23 @@ export async function sendEmailPasswordResetLink(user:User):Promise<void> {
 
 export async function sendPhoneNumberPasswordResetLink(user:User): Promise<void> {
     const url = `${<string>process.env.CLIENT_BASE_URL}/reset-password?token=${createToken(user)}`;
-    await pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
-        DestinationPhoneNumber: user.phoneNumber,
-        OriginationIdentity: originationIdentity,
-        MessageBody: `To reset your ${appName} password please visit this link (valid for ${linkExpirationDuration}): ${url}`
-    })).catch(err => console.error(err));;
+    await pinpointSMSVoiceV2Client.send(
+        new SendTextMessageCommand({
+            DestinationPhoneNumber: user.phoneNumber,
+            OriginationIdentity: originationIdentity,
+            MessageBody: `To reset your ${appName} password please visit this link (valid for ${linkExpirationDuration}): ${url}`
+        })
+    );
 }
 
 export async function sendPhoneNumberVerificationRequest(user:User): Promise<void> {
-    await pinpointSMSVoiceV2Client.send(new SendTextMessageCommand({
-        DestinationPhoneNumber: user.phoneNumber,
-        OriginationIdentity: originationIdentity,
-        MessageBody: `Your ${appName} OTP is ${user.otp.toString().padStart(6, "0")} (valid for ${phoneNumberVerificationOTPExpirationDuration})`
-    })).catch(err => console.error(err));;
+    await pinpointSMSVoiceV2Client.send(
+        new SendTextMessageCommand({
+            DestinationPhoneNumber: user.phoneNumber,
+            OriginationIdentity: originationIdentity,
+            MessageBody: `Your ${appName} OTP is ${user.otp.toString().padStart(6, "0")} (valid for ${phoneNumberVerificationOTPExpirationDuration})`
+        })
+    );
 }
 
 function createToken(user: User): string {

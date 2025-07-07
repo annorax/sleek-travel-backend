@@ -84,7 +84,16 @@ export class VerifyPhoneNumberArgs {
 export class SafeUser extends Omit(User, ["password", "otp", "otpCreatedAt", "phoneNumberVerified", "emailVerified", "createdAt", "updatedAt"]) { }
 
 @ObjectType()
-export class LogInPayload {
+export class RegisterUserResponse {
+    @Field()
+    error?: string;
+    
+    @Field(() => GraphQLBigInt)
+    userId?: bigint;
+}
+
+@ObjectType()
+export class LogInUserResponse {
     @Field()
     error?: string;
     
@@ -96,12 +105,15 @@ export class LogInPayload {
 }
 
 @ObjectType()
-export class ValidateTokenPayload {
+export class ValidateTokenResponse {
     @Field()
-    token!: string;
+    error?: string;
+    
+    @Field()
+    token?: string;
 
     @Field()
-    user!: SafeUser;
+    user?: SafeUser;
 }
 
 @InputType()
