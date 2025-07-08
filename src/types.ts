@@ -85,34 +85,34 @@ export class SafeUser extends Omit(User, ["password", "otp", "otpCreatedAt", "ph
 
 @ObjectType()
 export class RegisterUserResponse {
-    @Field()
+    @Field({ nullable: true })
     error?: string;
     
-    @Field(() => GraphQLBigInt)
+    @Field(() => GraphQLBigInt, { nullable: true })
     userId?: bigint;
 }
 
 @ObjectType()
 export class LogInUserResponse {
-    @Field()
+    @Field({ nullable: true })
     error?: string;
     
-    @Field()
+    @Field({ nullable: true })
     token?: string;
 
-    @Field()
+    @Field({ nullable: true })
     user?: SafeUser;
 }
 
 @ObjectType()
 export class ValidateTokenResponse {
-    @Field()
+    @Field({ nullable: true })
     error?: string;
     
-    @Field()
+    @Field({ nullable: true })
     token?: string;
 
-    @Field()
+    @Field({ nullable: true })
     user?: SafeUser;
 }
 
@@ -122,7 +122,7 @@ export class STProductOrderByWithRelationInput {
     field!: "id" | "name" | "upc" | "upcScanned" | "description" | "amazonASIN" | "country" | "brand" | "model" | "color" | "weightInKgs" | "widthInCms" | "heightInCms" | "depthInCms" | "currency" | "price" | "createdAt" | "updatedAt";
 
     @Field(type => SortOrder, { nullable: true })
-    direction: "asc" | "desc" | undefined;
+    direction?: "asc" | "desc" | undefined;
 }
 
 @InputType()

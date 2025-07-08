@@ -44,13 +44,13 @@ export class CustomUserResolver {
             console.error(err);
         }
         try {
-            await sendPhoneNumberVerificationRequest(user).catch(err => console.error(err));
+            await sendPhoneNumberVerificationRequest(user);
         } catch (err) {
             failures.push('SMS');
             console.error(err);
         }
         if (failures.length) {
-            return {error: `Failed to send ${failures.join(' and ')}`};
+            return { error: `Failed to send ${failures.join(' and ')}` };
         }
         return { userId: user.id };
     }
