@@ -37,6 +37,7 @@ export class CustomUserResolver {
                 role: Role.NORMAL,
             }
         });
+        const result:RegisterUserResponse = { userId: user.id };
         try {
             await sendEmailVerificationRequest(user);
         } catch (err) {
@@ -50,9 +51,9 @@ export class CustomUserResolver {
             console.error(err);
         }
         if (failures.length) {
-            return { error: `Failed to send ${failures.join(' and ')}` };
+            result.error = `Failed to send ${failures.join(' and ')}`;
         }
-        return { userId: user.id };
+        return result;
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
