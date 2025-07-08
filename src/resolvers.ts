@@ -24,7 +24,6 @@ export class CustomUserResolver {
         @Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { name, phoneNumber, email, password }: RegisterUserArgs,
     ) : Promise<RegisterUserResponse> {
-        const failures : Array<string> = [];
         const otp = generateOTP();
         const user = await prisma.user.create({
             data: {
@@ -38,6 +37,7 @@ export class CustomUserResolver {
             }
         });
         const result:RegisterUserResponse = { userId: user.id };
+        const failures : Array<string> = [];
         try {
             await sendEmailVerificationRequest(user);
         } catch (err) {
@@ -118,7 +118,7 @@ export class CustomUserResolver {
             throw "User not found";
         }
         verifyPhoneNumber(user, otp);
-        const result = await prisma.user.updateMany({
+        await prisma.user.updateMany({
             where: {
                 id: userId,
                 phoneNumberVerified: null
@@ -133,16 +133,13 @@ export class CustomUserResolver {
         @Args() { token }: VerifyEmailAddressArgs,
     ) : Promise<void> {
         const userId = verifyEmailAddress(token);
-        const result = await prisma.user.updateMany({
+        await prisma.user.updateMany({
             where: {
                 id: userId,
                 emailVerified: null
             },
             data: { emailVerified: new Date() }
         });
-        if (!result.count) {
-            throw "Already verified";
-        }
     }
 
     @Mutation(returns => LogInUserResponse)
@@ -170,7 +167,6 @@ export class CustomUserResolver {
             return { error: "Unverified phone number." };
         }
         const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
-        const sanitizedUser = sanitizeUser(user);
         return { token: tokenValue, user: sanitizeUser(user) }
     }
 
