@@ -116,6 +116,18 @@ export class ValidateTokenResponse {
     user?: SafeUser;
 }
 
+@ObjectType()
+export class ResendEmailVerificationResponse {
+    @Field({ nullable: true })
+    error?: string;
+}
+
+@ObjectType()
+export class ResendPhoneNumberVerificationResponse {
+    @Field({ nullable: true })
+    error?: string;
+}
+
 @InputType()
 export class STProductOrderByWithRelationInput {
     @Field(type => ProductScalarFieldEnum)

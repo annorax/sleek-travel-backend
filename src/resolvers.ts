@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { GraphQLContext } from "./context";
 import { Resolver, Args, Ctx, Mutation, Query, Authorized, Arg, Info } from "type-graphql";
 import { comparePassword, createLoginAndToken, expireAccessToken, hashPassword, sendEmailPasswordResetLink, sendEmailVerificationRequest, sendPhoneNumberPasswordResetLink, sendPhoneNumberVerificationRequest, verifyEmailAddress, verifyPhoneNumber } from "./auth";
-import { LogInUserArgs, LogInUserResponse, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenResponse, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput, SendPasswordResetLinkArgs, RegisterUserResponse } from "./types";
+import { LogInUserArgs, LogInUserResponse, RegisterUserArgs, SafeUser, VerifyEmailAddressArgs, VerifyPhoneNumberArgs, ResendPhoneNumberVerificationRequestArgs, ResendEmailVerificationRequestArgs, ValidateTokenArgs, ValidateTokenResponse, STFindManyProductArgs, STFindManyPurchaseOrderArgs, STFindManyItemArgs, STProductOrderByWithRelationInput, SendPasswordResetLinkArgs, RegisterUserResponse, ResendEmailVerificationResponse, ResendPhoneNumberVerificationResponse } from "./types";
 import { AccessToken, Role, User } from "@prisma/client";
 import { GraphQLBigInt, GraphQLLong, GraphQLVoid } from "graphql-scalars";
 import crypto from "crypto";
@@ -57,19 +57,6 @@ export class CustomUserResolver {
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
-    async resendEmailVerificationRequest(@Ctx() { initialContext, prisma }: GraphQLContext,
-        @Args() { email }: ResendEmailVerificationRequestArgs,
-    ) : Promise<void> {
-        const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
-        });
-        if (!user) {
-            throw "User not found";
-        }
-        await sendEmailVerificationRequest(user);
-    }
-
-    @Mutation(returns => GraphQLVoid, { nullable: true })
     async sendPasswordResetLink(@Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { emailOrPhone }: SendPasswordResetLinkArgs,
     ) : Promise<void> {
@@ -86,10 +73,28 @@ export class CustomUserResolver {
         await sendPhoneNumberPasswordResetLink(user);
     }
 
-    @Mutation(returns => GraphQLVoid, { nullable: true })
+    @Mutation(returns => ResendEmailVerificationResponse)
+    async resendEmailVerificationRequest(@Ctx() { initialContext, prisma }: GraphQLContext,
+        @Args() { email }: ResendEmailVerificationRequestArgs,
+    ) : Promise<ResendEmailVerificationResponse> {
+        const user = await prisma.user.findUnique({
+            where: { email: email.toLowerCase() }
+        });
+        if (!user) {
+            return { error: "User not found." };
+        }
+        try {
+            await sendEmailVerificationRequest(user);
+        } catch (err) {
+            return { error: "Failed to send email." };
+        }
+        return {};
+    }
+
+    @Mutation(returns => ResendPhoneNumberVerificationResponse)
     async resendPhoneNumberVerificationRequest(@Ctx() { initialContext, prisma }: GraphQLContext,
         @Args() { phoneNumber }: ResendPhoneNumberVerificationRequestArgs,
-    ) : Promise<void> {
+    ) : Promise<ResendPhoneNumberVerificationResponse> {
         const otp = generateOTP();
         let user;
         try {
@@ -101,9 +106,14 @@ export class CustomUserResolver {
                 }
             });
         } catch (e) {
-            throw "User not found";
+            return { error: "User not found." };
         }
-        await sendPhoneNumberVerificationRequest(user);
+        try {
+            await sendPhoneNumberVerificationRequest(user);
+        } catch(err) {
+            return { error: "Failed to send SMS." };
+        }
+        return {};
     }
 
     @Mutation(returns => GraphQLVoid, { nullable: true })
