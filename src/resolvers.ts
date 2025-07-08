@@ -51,7 +51,7 @@ export class CustomUserResolver {
             console.error(err);
         }
         if (failures.length) {
-            result.error = `Failed to send ${failures.join(' and ')}`;
+            result.error = `Failed to send ${failures.join(' and ')}. Please check back later by trying to log in.`;
         }
         return result;
     }
