@@ -170,14 +170,15 @@ export class CustomUserResolver {
         if (!passwordsMatch) {
             return { error: "Incorrect password." };
         }
+        const response: LogInUserResponse = { user: sanitizeUser(user) }
         if (!user.emailVerified) {
-            return { error: "Unverified email address." };
+            response.error = "Unverified email address.";
+        } else if (!user.phoneNumberVerified) {
+            response.error = "Unverified phone number.";
+        } else {
+            response.token = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
         }
-        if (!user.phoneNumberVerified) {
-            return { error: "Unverified phone number." };
-        }
-        const tokenValue = await createLoginAndToken(prisma, extractIpAddress(initialContext.req), user.id, true);
-        return { token: tokenValue, user: sanitizeUser(user) }
+        return response;
     }
 
     @Authorized()
