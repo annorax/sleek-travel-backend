@@ -1,4 +1,4 @@
-import { User, Role, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -8,6 +8,7 @@ import { createTransport } from "nodemailer";
 import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
 import { GraphQLResolveInfo } from "graphql";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { User, Role } from "@generated/type-graphql"
 import parse from 'parse-duration'
 
 const linkExpirationDuration = "1 hour";
@@ -158,7 +159,7 @@ export class CustomAuthChecker implements AuthCheckerInterface<GraphQLContext> {
         if (!roles.length) {
             return ownDataOnly ?  this.accessingOwnData(root, args, context, info) : true;
         }
-        if (roles.indexOf(context.user.role) === -1) {
+        if (Role.ADMIN.toString() !== context.user.role && Role.NORMAL.toString() !== context.user.role) {
             return false;
         }
         if (!ownDataOnly) {

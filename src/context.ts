@@ -1,4 +1,5 @@
-import { PrismaClient, AccessToken, User } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { AccessToken, User } from "@generated/type-graphql"
 
 const prisma = new PrismaClient();
 

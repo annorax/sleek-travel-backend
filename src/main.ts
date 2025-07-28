@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ProductCrudResolver, ItemCrudResolver, PurchaseOrderCrudResolver, PurchaseOrderRelationsResolver, applyResolversEnhanceMap } from "@generated/type-graphql";
+import { ProductCrudResolver, ItemCrudResolver, PurchaseOrderCrudResolver, PurchaseOrderRelationsResolver, applyResolversEnhanceMap, Role } from "@generated/type-graphql";
 import _ from "lodash";
 import express from "express";
 import { createYoga } from 'graphql-yoga';
@@ -7,7 +7,6 @@ import { createContext } from './context';
 import passport from 'passport';
 import { buildSchema, Authorized, Extensions } from "type-graphql";
 import { CustomAuthChecker } from "./auth";
-import { Role } from "@prisma/client";
 import { CustomItemResolver, CustomProductResolver, CustomPurchaseOrderResolver, CustomUserResolver } from "./resolvers";
 
 async function main(): Promise<void> {
