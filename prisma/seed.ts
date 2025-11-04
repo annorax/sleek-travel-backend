@@ -1,5 +1,6 @@
-import { PrismaClient } from '@prisma/client'
-import { hashPassword } from '../src/auth'
+import "reflect-metadata";
+import { PrismaClient } from '@prisma/client';
+import { hashPassword } from '../src/auth';
 const prisma = new PrismaClient()
 const now = new Date();
 async function main() {

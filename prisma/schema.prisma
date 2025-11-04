@@ -32,7 +32,7 @@ enum PurchaseOrderStatus {
 }
 
 model User {
-  id                  BigInt    @id @default(autoincrement())
+  id                  Int    @id @default(autoincrement())
   name                String
   phoneNumber         String    @unique
   otp                 Int
@@ -51,9 +51,9 @@ model User {
 }
 
 model Login {
-  id          BigInt      @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   ipAddress   String?     @db.Inet
-  userId      BigInt
+  userId      Int
   user        User        @relation(fields: [userId], references: [id])
   tokenValue  String
   accessToken AccessToken @relation(fields: [tokenValue], references: [value])
@@ -63,14 +63,14 @@ model Login {
 
 model AccessToken {
   value   String   @id
-  userId  BigInt
+  userId  Int
   user    User     @relation(fields: [userId], references: [id])
   logins  Login[]
   expired Boolean  @default(false)
 }
 
 model Product {
-  id                    BigInt    @id @default(autoincrement())
+  id                    Int    @id @default(autoincrement())
   name                  String
   upc                   String?
   upcScanned            Boolean?
@@ -93,13 +93,13 @@ model Product {
 }
 
 model Item {
-  id          BigInt   @id @default(autoincrement())
-  userId      BigInt
+  id          Int   @id @default(autoincrement())
+  userId      Int
   user        User     @relation(fields: [userId], references: [id])
   code        String   @unique
   name        String
   description String?
-  productId   BigInt?
+  productId   Int?
   product     Product? @relation(fields: [productId], references: [id])
   weightInKgs Float?
   widthInCms  Float?
@@ -110,8 +110,8 @@ model Item {
 }
 
 model PurchaseOrder {
-  id          BigInt              @id @default(autoincrement())
-  userId      BigInt
+  id          Int              @id @default(autoincrement())
+  userId      Int
   user        User                @relation(fields: [userId], references: [id])
   price       Decimal             @db.Money
   status      PurchaseOrderStatus
@@ -121,11 +121,11 @@ model PurchaseOrder {
 }
 
 model PurchaseOrderEntry {
-  id          BigInt        @id @default(autoincrement())
-  orderId     BigInt
+  id          Int        @id @default(autoincrement())
+  orderId     Int
   order       PurchaseOrder @relation(fields: [orderId], references: [id])
   quantity    Int
-  productId   BigInt
+  productId   Int
   product     Product       @relation(fields: [productId], references: [id])
   currency    Currency
   unitPrice   Decimal       @db.Money
