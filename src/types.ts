@@ -68,7 +68,7 @@ export class VerifyEmailAddressArgs {
 
 @ArgsType()
 export class VerifyPhoneNumberArgs {
-    @Field()
+    @Field(type => Int)
     userId!: number;
 
     @Field()
@@ -86,8 +86,7 @@ export class SafeUser extends Omit(User, ["password", "otp", "otpCreatedAt", "ph
 export class RegisterUserResponse {
     @Field({ nullable: true })
     error?: string;
-    
-    @Field({ nullable: true })
+    @Field(type => Int, { nullable: true })
     userId?: number;
 }
 
