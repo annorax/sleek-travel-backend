@@ -269,6 +269,12 @@ export class CustomItemResolver {
                 (entry) => Object.fromEntries(new Map<string, any>([[entry.field, entry.direction]]))
             );
         }
+        if (ctx.user?.role !== Role.ADMIN) {
+            onwardArgs.where = {
+                ...onwardArgs.where,
+                userId: { equals: ctx.user!.id }
+            };
+        }
         return new FindManyItemResolver().items(ctx, info, onwardArgs);
     }
 }
@@ -302,6 +308,12 @@ export class CustomPurchaseOrderResolver {
             onwardArgs.orderBy = args.orderBy?.map(
                 (entry) => Object.fromEntries(new Map<string, any>([[entry.field, entry.direction]]))
             );
+        }
+        if (ctx.user?.role !== Role.ADMIN) {
+            onwardArgs.where = {
+                ...onwardArgs.where,
+                userId: { equals: ctx.user!.id }
+            };
         }
         return new FindManyPurchaseOrderResolver().purchaseOrders(ctx, info, onwardArgs);
     }
