@@ -1,14 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import type { User } from "@prisma/client";
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { ArgsDictionary, AuthCheckerInterface, ResolverData } from 'type-graphql';
-import { GraphQLContext } from "./context";
 import { createTransport } from "nodemailer";
 import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
-import { GraphQLResolveInfo } from "graphql";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { User, Role } from "@generated/type-graphql"
 import parse from 'parse-duration'
 
 const linkExpirationDuration = "1 hour";
@@ -35,7 +32,7 @@ const emailTransport = createTransport({
 
 const pinpointSMSVoiceV2Client = new PinpointSMSVoiceV2Client({});
 
-export async function sendEmailVerificationRequest(user:User):Promise<void> {
+export async function sendEmailVerificationRequest(user: User): Promise<void> {
     const url = `${<string>process.env.CLIENT_BASE_URL}/verify-email?token=${createToken(user)}`;
     await emailTransport.sendMail({
         from: from,
@@ -46,7 +43,7 @@ export async function sendEmailVerificationRequest(user:User):Promise<void> {
     });
 }
 
-export async function sendEmailPasswordResetLink(user:User):Promise<void> {
+export async function sendEmailPasswordResetLink(user: User): Promise<void> {
     const url = `${<string>process.env.CLIENT_BASE_URL}/reset-password?token=${createToken(user)}`;
     await emailTransport.sendMail({
         from: from,
@@ -57,7 +54,7 @@ export async function sendEmailPasswordResetLink(user:User):Promise<void> {
     });
 }
 
-export async function sendPhoneNumberPasswordResetLink(user:User): Promise<void> {
+export async function sendPhoneNumberPasswordResetLink(user: User): Promise<void> {
     const url = `${<string>process.env.CLIENT_BASE_URL}/reset-password?token=${createToken(user)}`;
     await pinpointSMSVoiceV2Client.send(
         new SendTextMessageCommand({
@@ -68,7 +65,7 @@ export async function sendPhoneNumberPasswordResetLink(user:User): Promise<void>
     );
 }
 
-export async function sendPhoneNumberVerificationRequest(user:User): Promise<void> {
+export async function sendPhoneNumberVerificationRequest(user: User): Promise<void> {
     await pinpointSMSVoiceV2Client.send(
         new SendTextMessageCommand({
             DestinationPhoneNumber: user.phoneNumber,
@@ -82,18 +79,18 @@ function createToken(user: User): string {
     return sign({ userId: user.id.toString() }, tokenSecret, { expiresIn: linkExpirationDuration });
 }
 
-export function verifyEmailAddress(token:string): number {
+export function verifyEmailAddress(token: string): number {
     const tokenPayload = verify(token, tokenSecret) as JwtPayload;
     return tokenPayload.userId;
 }
 
-export function verifyPhoneNumber(user:User, otp:string): void {
-    const phoneNumberVerificationOTPExpirationDurationInMs:number = parse(phoneNumberVerificationOTPExpirationDuration) ?? 0;
-    if (user.otpCreatedAt.getTime() < new Date().getTime() - phoneNumberVerificationOTPExpirationDurationInMs) {
-        throw "OTP expired";
+export function verifyPhoneNumber(user: User, otp: string): void {
+    const expirationMs: number = parse(phoneNumberVerificationOTPExpirationDuration) ?? 0;
+    if (user.otpCreatedAt.getTime() < new Date().getTime() - expirationMs) {
+        throw new Error("OTP expired");
     }
-    if (user?.otp !== parseInt(otp)) {
-        throw "OTP mismatch";
+    if (user.otp !== parseInt(otp)) {
+        throw new Error("OTP mismatch");
     }
 }
 
@@ -102,7 +99,7 @@ export async function hashPassword(password: string) {
     const buf = (await scryptAsync(password, salt, 64)) as Buffer;
     return `${buf.toString("hex")}.${salt}`;
 }
-  
+
 export async function comparePassword(
     storedPassword: string,
     suppliedPassword: string
@@ -113,26 +110,23 @@ export async function comparePassword(
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
 }
 
-export async function expireAccessToken(prisma:PrismaClient, token:string) {
-    await prisma.accessToken.update({ where: { value: token }, data: { expired: true }});
+export async function expireAccessToken(prisma: PrismaClient, token: string) {
+    await prisma.accessToken.update({ where: { value: token }, data: { expired: true } });
 }
 
-export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|null, userId:number, explicit:boolean):Promise<string> {
+export async function createLoginAndToken(prisma: PrismaClient, ipAddress: string | null, userId: number, explicit: boolean): Promise<string> {
     const tokenValue = randomBytes(64).toString("base64url");
-    let retry:boolean;
+    let retry: boolean;
     let attempts = 0;
     do {
         retry = false;
         attempts++;
         try {
             await prisma.accessToken.create({
-                data: {
-                    value: tokenValue,
-                    userId: userId
-                }
+                data: { value: tokenValue, userId }
             });
         } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") { // unique constraint violation
+            if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
                 retry = true;
             } else {
                 throw error;
@@ -142,35 +136,10 @@ export async function createLoginAndToken(prisma:PrismaClient, ipAddress:string|
     await prisma.login.create({
         data: {
             ...(ipAddress ? { ipAddress } : {}),
-            userId: userId,
-            tokenValue: tokenValue,
-            explicit: explicit
+            userId,
+            tokenValue,
+            explicit,
         }
     });
     return tokenValue;
-}
-
-export class CustomAuthChecker implements AuthCheckerInterface<GraphQLContext> {
-    check({ root, args, context, info }: ResolverData<GraphQLContext>, roles: Role[]) {
-        if (!context.user) {
-            return false;
-        }
-        const { ownDataOnly } = info.parentType.getFields()[info.fieldName].extensions || {}
-        if (!roles.length) {
-            return ownDataOnly ?  this.accessingOwnData(root, args, context, info) : true;
-        }
-        if (Role.ADMIN.toString() !== context.user.role && Role.NORMAL.toString() !== context.user.role) {
-            return false;
-        }
-        if (!ownDataOnly) {
-            return true;
-        }
-        return context.user.role === Role.ADMIN || this.accessingOwnData(root, args, context, info);
-    }
-    
-    private accessingOwnData(root: any, args: ArgsDictionary, context: GraphQLContext, info: GraphQLResolveInfo): boolean {
-        const userIdFilter = args?.where?.userId?.equals;
-        const currentUserId = context.user?.id;
-        return userIdFilter && userIdFilter === currentUserId;
-    }
 }

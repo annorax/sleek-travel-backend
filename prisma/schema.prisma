@@ -5,9 +5,8 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator typegraphql {
-  provider                  = "typegraphql-prisma"
-  omitOutputFieldsByDefault = "createdAt,updatedAt"
+generator pothos {
+  provider = "prisma-pothos-types"
 }
 
 datasource db {
