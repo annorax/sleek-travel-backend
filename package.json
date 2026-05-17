@@ -32,7 +32,7 @@
     "reflect-metadata": "^0.2.2",
     "safe-stable-stringify": "^2.5.0",
     "tslib": "^2.8.1",
-    "type-graphql": "^2.0.0-rc.2"
+    "type-graphql": "^2.0.0-rc.4"
   },
   "devDependencies": {
     "@prisma/client": "^5.22.0",
