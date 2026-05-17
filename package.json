@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-pinpoint-sms-voice-v2": "^3.958.0",
-    "@graphql-tools/schema": "^10.0.30",
+    "@graphql-tools/schema": "^10.0.33",
     "bcryptjs": "^3.0.3",
     "class-validator": "^0.14.3",
     "dotenv": "^17.4.2",
