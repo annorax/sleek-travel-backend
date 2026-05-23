@@ -1,6 +1,6 @@
 import { builder, prisma } from './builder';
-import type { User as PrismaUser } from '@prisma/client';
-import { Role, Prisma } from '@prisma/client';
+import type { User as PrismaUser } from './generated/prisma/client';
+import { Role, Prisma } from './generated/prisma/client';
 
 const n2u = <T>(v: T | null | undefined): T | undefined => v ?? undefined;
 

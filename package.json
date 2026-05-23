@@ -7,11 +7,11 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development ts-node-dev --exit-child --respawn src/main.ts",
-    "start": "ts-node src/main.ts"
+    "dev": "cross-env NODE_ENV=development tsx watch src/main.ts",
+    "start": "tsx src/main.ts"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-pinpoint-sms-voice-v2": "^3.958.0",
@@ -19,6 +19,7 @@
     "@pothos/core": "^4.12.0",
     "@pothos/plugin-prisma": "^4.14.3",
     "@pothos/plugin-scope-auth": "^4.1.6",
+    "@prisma/adapter-pg": "^7.8.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -28,19 +29,20 @@
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^8.0.7",
     "parse-duration": "^2.1.6",
+    "pg": "^8.13.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^7.8.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.8.0",
     "@types/nodemailer": "^8.0.0",
+    "@types/pg": "^8.11.0",
     "cross-env": "^10.1.0",
-    "prisma": "^5.22.0",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
+    "prisma": "^7.8.0",
+    "tsx": "^4.19.0",
     "typescript": "^6.0.3"
   }
 }

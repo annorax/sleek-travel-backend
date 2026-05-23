@@ -1,11 +1,10 @@
-import { PrismaClient } from "@prisma/client";
-import type { User } from "@prisma/client";
+import type { PrismaClient, User } from './generated/prisma/client';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { createTransport } from "nodemailer";
 import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { Prisma } from './generated/prisma/client';
 import parse from 'parse-duration'
 
 const linkExpirationDuration = "1 hour";
@@ -126,7 +125,7 @@ export async function createLoginAndToken(prisma: PrismaClient, ipAddress: strin
                 data: { value: tokenValue, userId }
             });
         } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
                 retry = true;
             } else {
                 throw error;

@@ -1,4 +1,4 @@
-import { PrismaClient, User, AccessToken } from '@prisma/client';
+import type { PrismaClient, User, AccessToken } from './generated/prisma/client';
 import { prisma } from './builder';
 
 export type GraphQLContext = {
