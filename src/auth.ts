@@ -80,7 +80,9 @@ function createToken(user: User): string {
 
 export function verifyEmailAddress(token: string): number {
     const tokenPayload = verify(token, tokenSecret) as JwtPayload;
-    return tokenPayload.userId;
+    // userId is signed as a String (see createToken) but the schema and
+    // Prisma 7 require Int — coerce explicitly.
+    return parseInt(tokenPayload.userId, 10);
 }
 
 export function verifyPhoneNumber(user: User, otp: string): void {
