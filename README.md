@@ -35,3 +35,17 @@ After any schema change, refresh the frontend's GraphQL schema file:
 npx tsx scripts/print-schema.ts > ../sleek-travel-frontend/lib/graphql/schema.graphql
 ```
 Then re-run Ferry codegen in the frontend (`flutter pub run build_runner build --delete-conflicting-outputs`).
+
+## Tests
+
+Run the full suite once:
+```
+npm test
+```
+
+Rerun on file changes:
+```
+npm run test:watch
+```
+
+The suite uses Node's built-in `node:test` runner and an in-process PGlite instance, so it does not require Docker or a running Postgres. See [`tests/README.md`](tests/README.md) for the harness architecture and conventions for adding tests.
