@@ -10,7 +10,8 @@
     "dev": "cross-env NODE_ENV=development tsx watch src/main.ts",
     "start": "tsx src/main.ts",
     "test": "cross-env NODE_ENV=test node --experimental-test-module-mocks --no-warnings=ExperimentalWarning --import tsx --import ./tests/setup/global.mts --test --test-concurrency=1 --test-global-setup=./tests/setup/pglite.mts \"tests/**/*.test.ts\"",
-    "test:watch": "cross-env NODE_ENV=test node --experimental-test-module-mocks --no-warnings=ExperimentalWarning --import tsx --import ./tests/setup/global.mts --test --test-concurrency=1 --test-global-setup=./tests/setup/pglite.mts --watch \"tests/**/*.test.ts\""
+    "test:watch": "cross-env NODE_ENV=test node --experimental-test-module-mocks --no-warnings=ExperimentalWarning --import tsx --import ./tests/setup/global.mts --test --test-concurrency=1 --test-global-setup=./tests/setup/pglite.mts --watch \"tests/**/*.test.ts\"",
+    "test:server": "cross-env NODE_ENV=test node --experimental-test-module-mocks --no-warnings=ExperimentalWarning --import tsx --import ./tests/setup/global.mts ./tests/setup/test-server.mts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -24,6 +24,9 @@ tests/
   setup/
     pglite.mts              # parent-process global setup (loaded via --test-global-setup)
     global.mts              # per-worker setup: env defaults + module mocks (loaded via --import)
+    test-server.mts         # long-running test server for the frontend integration suite (npm run test:server)
+  server/
+    router.ts               # /__test__ HTTP control surface mounted by test-server.mts
   helpers/
     db.ts                   # resetDatabase, seedUser, seedProduct, issueAccessToken, getMailbox/Smsbox
     gql.ts                  # execute(), expectData(), expectError(), exported schema
@@ -54,6 +57,37 @@ tests/
    import { execute, expectData, expectError } from '../helpers/gql';
    ```
 3. Either `db.ts` or `gql.ts` registers an `after()` that disconnects Prisma, so the worker exits cleanly. Importing at least one of them is enough.
+
+## Test server for the frontend integration suite
+
+```
+npm run test:server
+```
+
+A long-running server the Flutter integration tests spawn. It runs the exact production app (`src/app.ts` — the same `createApp()` that `src/main.ts` uses) but wires up the test environment that the unit/integration suites also use, then mounts an extra control router so the frontend harness can drive it between tests.
+
+| Concern | How it's handled |
+|---|---|
+| TS loader + module mocks | Inherited from the same flags as `npm test` — `--import tsx --import ./tests/setup/global.mts` plus `--experimental-test-module-mocks` — so nodemailer and the AWS Pinpoint SMS client are stubbed exactly as in unit tests, and captured payloads land in the same in-process mailbox/smsbox arrays. |
+| Database | `tests/setup/test-server.mts` boots its own PGlite + `pglite-socket` (mirroring `setup/pglite.mts`), applies every migration in `prisma/migrations/`, then sets `DATABASE_URL` before importing `src/*` so the Prisma adapter picks it up unchanged. |
+| Listening port | `app.listen(0, '127.0.0.1', …)` — kernel picks a free port. The chosen URL is printed as `TEST_SERVER_LISTENING url=http://127.0.0.1:<port>` on stdout so the parent process can discover it. |
+| Shutdown | SIGINT/SIGTERM trigger a graceful close (`TEST_SERVER_SHUTDOWN signal=<sig>` on stdout). On Windows, the parent typically terminates the process tree. |
+
+### `/__test__` control surface
+
+The router lives at [`tests/server/router.ts`](server/router.ts) and is mounted only by `test-server.mts`. Each request additionally checks `NODE_ENV === 'test'` and returns 404 otherwise — a misconfigured deploy that somehow imported the module still can't expose the endpoints.
+
+| Method & path | Body | Effect / returns |
+|---|---|---|
+| `POST /__test__/reset` | — | `resetDatabase()` (TRUNCATE … RESTART IDENTITY CASCADE) and `clearOutbox()`. Returns `{ ok: true }`. Call from the frontend's per-test `setUp`. |
+| `POST /__test__/seed/user` | `SeedUserOptions` (see `helpers/db.ts`) | Calls `seedUser()`. Returns `{ user, password }` where `password` is the plaintext that was hashed into the row. |
+| `POST /__test__/seed/product` | `Partial<{name,currency,price,brand,upc}>` | Calls `seedProduct()`. Returns `{ product }`. |
+| `POST /__test__/access-token` | `{ userId: number, value?: string }` | Calls `issueAccessToken()`. Returns `{ value }`. |
+| `GET  /__test__/mailbox` | — | Captured outbound emails (array of `CapturedMail`). Used to read OTP/verification links the app would have sent. |
+| `GET  /__test__/smsbox` | — | Captured outbound SMS (array of `CapturedSms`). Used to read OTPs. |
+| `POST /__test__/outbox/clear` | — | `clearOutbox()` only — does not touch the DB. Returns `{ ok: true }`. |
+
+Adding a new endpoint: extend `tests/server/router.ts`, importing the helper from `helpers/db.ts` if one already exists. The router is mounted behind `express.json()`, so request bodies are parsed for you.
 
 ## Non-brittleness notes
 

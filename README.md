@@ -49,3 +49,11 @@ npm run test:watch
 ```
 
 The suite uses Node's built-in `node:test` runner and an in-process PGlite instance, so it does not require Docker or a running Postgres. See [`tests/README.md`](tests/README.md) for the harness architecture and conventions for adding tests.
+
+### Test server for the frontend integration suite
+
+```
+npm run test:server
+```
+
+Boots the same app as production (`src/app.ts`) against an in-process PGlite database with the nodemailer + AWS Pinpoint SMS mocks active, picks an ephemeral port, and prints `TEST_SERVER_LISTENING url=http://127.0.0.1:<port>` on stdout. Mounts an extra `/__test__` router (gated on `NODE_ENV === 'test'`) that lets the frontend integration test harness reset the DB, seed fixtures, and inspect the captured email/SMS outbox between tests. Stop with SIGINT/SIGTERM. See [`tests/README.md`](tests/README.md#test-server-for-the-frontend-integration-suite) for the endpoint reference.
