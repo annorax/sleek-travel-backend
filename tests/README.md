@@ -77,6 +77,8 @@ A long-running server the Flutter integration tests spawn. It runs the exact pro
 
 The router lives at [`tests/server/router.ts`](server/router.ts) and is mounted only by `test-server.mts`. Each request additionally checks `NODE_ENV === 'test'` and returns 404 otherwise — a misconfigured deploy that somehow imported the module still can't expose the endpoints.
 
+It also runs a permissive CORS middleware (reflecting `Origin`, allowing `GET/POST/OPTIONS` + `content-type`) so the Flutter web integration suite can hit it from the browser. The middleware is mounted on the router itself, so it only ever ships when this test-only router is mounted. Yoga's defaults handle CORS for `/graphql`.
+
 | Method & path | Body | Effect / returns |
 |---|---|---|
 | `POST /__test__/reset` | — | `resetDatabase()` (TRUNCATE … RESTART IDENTITY CASCADE) and `clearOutbox()`. Returns `{ ok: true }`. Call from the frontend's per-test `setUp`. |

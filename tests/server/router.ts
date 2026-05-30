@@ -29,6 +29,28 @@ import {
 export function createTestControlRouter(): Router {
     const router = Router();
 
+    // Permissive CORS for the /__test__/* surface. Flutter web integration
+    // tests run from an ephemeral http://localhost:<random> origin and call
+    // these endpoints from the browser, so the browser enforces CORS. Yoga's
+    // built-in CORS already covers /graphql; this covers the test surface.
+    // Test-only: NODE_ENV gate below + the router only being mounted by
+    // test-server.mts mean these headers never reach a production response.
+    router.use((req, res, next) => {
+        const origin = req.headers.origin;
+        if (origin) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Vary', 'Origin');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+        }
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'content-type');
+        if (req.method === 'OPTIONS') {
+            res.status(204).end();
+            return;
+        }
+        next();
+    });
+
     router.use((_req, res, next) => {
         if (process.env.NODE_ENV !== 'test') {
             res.status(404).end();
