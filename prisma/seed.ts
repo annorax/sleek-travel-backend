@@ -10,8 +10,10 @@ const now = new Date();
 
 async function main() {
   const idoEmail = 'ido.dovrat@gmail.com';
-  await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: { email: idoEmail },
+    update: {},
+    create: {
       email: idoEmail,
       emailVerified: now,
       name: 'Ido Dovrat',
@@ -28,6 +30,7 @@ async function main() {
       { name: 'Product A', currency: 'EUR', price: 10, updatedAt: now },
       { name: 'Product B', currency: 'EUR', price: 20, updatedAt: new Date(now.getTime() - 1000) },
     ],
+    skipDuplicates: true,
   });
 }
 
