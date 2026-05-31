@@ -25,13 +25,14 @@ async function main() {
       role: 'ADMIN',
     },
   });
-  await prisma.product.createMany({
-    data: [
-      { name: 'Product A', currency: 'EUR', price: 10, updatedAt: now },
-      { name: 'Product B', currency: 'EUR', price: 20, updatedAt: new Date(now.getTime() - 1000) },
-    ],
-    skipDuplicates: true,
-  });
+  for (const data of [
+    { name: 'Product A', currency: 'EUR' as const, price: 10, updatedAt: now },
+    { name: 'Product B', currency: 'EUR' as const, price: 20, updatedAt: new Date(now.getTime() - 1000) },
+  ]) {
+    if (!await prisma.product.findFirst({ where: { name: data.name } })) {
+      await prisma.product.create({ data });
+    }
+  }
 }
 
 main()
