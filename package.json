@@ -13,9 +13,6 @@
     "test:watch": "cross-env NODE_ENV=test node --experimental-test-module-mocks --no-warnings=ExperimentalWarning --import tsx --import ./tests/setup/global.mts --test --test-concurrency=1 --test-global-setup=./tests/setup/pglite.mts --watch \"tests/**/*.test.ts\"",
     "test:server": "cross-env NODE_ENV=test node --experimental-test-module-mocks --no-warnings=ExperimentalWarning --import tsx --import ./tests/setup/global.mts ./tests/setup/test-server.mts"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@aws-sdk/client-pinpoint-sms-voice-v2": "^3.958.0",
     "@graphql-tools/schema": "^10.0.33",
